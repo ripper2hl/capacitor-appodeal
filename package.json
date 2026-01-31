@@ -1,0 +1,66 @@
+{
+  "name": "capacitor-appodeal",
+  "version": "0.0.1",
+  "description": "Unofficial Appodeal Mediation Plugin for Capacitor",
+  "author": "Israel Perales",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ripper2hl/capacitor-appodeal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ripper2hl/capacitor-appodeal/issues"
+  },
+  "homepage": "https://github.com/ripper2hl/capacitor-appodeal#readme",
+  "main": "dist/plugin.cjs.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "dist/",
+    "android/"
+  ],
+  "scripts": {
+    "verify": "npm run verify:android && npm run verify:web",
+    "verify:android": "cd android && ./gradlew clean build test && cd ..",
+    "verify:web": "npm run build",
+    "lint": "npm run eslint && npm run prettier -- --check",
+    "fmt": "npm run eslint -- --fix && npm run prettier -- --write",
+    "eslint": "eslint . --ext ts",
+    "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
+    "docgen": "docgen --api AppodealPlugin --output-readme README.md --output-json dist/docs.json",
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native"
+  ],
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/docgen": "^0.2.1",
+    "@ionic/eslint-config": "^0.4.0",
+    "@ionic/prettier-config": "^1.0.1",
+    "eslint": "^8.57.0",
+    "prettier": "~2.8.8",
+    "prettier-plugin-java": "1.6.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.32.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-summary": "^2.0.0",
+    "typescript": "~4.1.5"
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "appId": "com.perales.sepomex.plugins.appodeal",
+    "appName": "capacitor-appodeal",
+    "webDir": "dist",
+    "bundledWebRuntime": false
+}

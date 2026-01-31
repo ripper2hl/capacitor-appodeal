@@ -1,0 +1,51 @@
+# General
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+.npm
+*.tgz
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.test
+.env.production
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+build_log.txt
+build_log_*.txt
+
+# Android
+android/.gradle/
+android/build/
+android/local.properties
+android/*.iml
+android/.idea/
+android/.navigation/
+android/captures/
+android/.externalNativeBuild/
+android/app/build/
+.gradle/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Capacitor
+capacitor.config.json.timestamp
