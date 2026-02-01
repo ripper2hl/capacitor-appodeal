@@ -91,7 +91,8 @@ import { Appodeal, AppodealAdType } from 'capacitor-appodeal';
 // Initialize
 await Appodeal.initialize({
   appKey: 'YOUR_APP_KEY',
-  adTypes: AppodealAdType.BANNER | AppodealAdType.INTERSTITIAL
+  adTypes: AppodealAdType.BANNER | AppodealAdType.INTERSTITIAL,
+  testing: true // Enable test ads (optional, default false)
 });
 
 // Show Banner
