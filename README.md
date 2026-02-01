@@ -8,36 +8,44 @@ This plugin allows you to integrate Appodeal ads into your Capacitor application
 
 ## Supported Platforms
 
-- Android
-- Web (Mock only)
-- iOS (Not implemented yet - Contributions welcome!)
+| Platform | Supported | SDK Version | Notes |
+| :--- | :---: | :---: | :--- |
+| **Android** | ✅ | `3.12.0.1` | Native implementation |
+| **Web** | ✅ | Mock | Development/Testing only |
+| **iOS** | ❌ | - | Not implemented yet |
+
+## Compatibility
+
+| Plugin Version | Capacitor Version | Angular |
+| :--- | :--- | :--- |
+| `0.0.x` | `^6.0.0` | `16+` |
 
 ## Installation
 
+### 1. Install NPM Package
 ```bash
 npm install capacitor-appodeal
 npx cap sync
 ```
 
-## Configuration
+### 2. Android Setup (CRITICAL)
+Since the Appodeal SDK is hosted on a custom repository, you **MUST** add the repository URL to your project's `android/build.gradle` (usually the root one, inside `allprojects` or `repositories` block).
 
-### Android
+**File:** `android/build.gradle` (Project level)
+```groovy
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // ADD THIS LINE:
+        maven { url "https://artifactory.appodeal.com/appodeal" }
+    }
+}
+```
 
-#### Excluded Adapters
-By default, this plugin initializes the Appodeal SDK with the following adapters **excluded** to prevent tracking/compliance issues and size bloat:
-- `adjust`
-- `appsflyer`
-- `facebook_analytics`
-- `firebase` (This often includes AdMob/Google Ads components)
-
-If you need these adapters, you must manually add them to your app's `build.gradle` dependencies or modify the plugin's `build.gradle` if you fork it.
-
-
-## Android Configuration (Critical)
-
-### 1. Network Security Config
+### 3. Network Security Config (Optional but Recommended)
 Appodeal requires allowing cleartext traffic for some ad networks.
-Create a file at `android/app/src/main/res/xml/network_security_config.xml` in your **main application** (not the plugin) with the following content:
+Create a file at `android/app/src/main/res/xml/network_security_config.xml` in your **main application** with the following content:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -53,8 +61,8 @@ Create a file at `android/app/src/main/res/xml/network_security_config.xml` in y
 </network-security-config>
 ```
 
-### 2. Update AndroidManifest.xml
-Open your **main application's** `android/app/src/main/AndroidManifest.xml` and add the `networkSecurityConfig` attribute to the `<application>` tag:
+### 4. Update AndroidManifest.xml
+Open your **main application's** `android/app/src/main/AndroidManifest.xml` and add the `networkSecurityConfig` attribute:
 
 ```xml
 <application
@@ -64,8 +72,16 @@ Open your **main application's** `android/app/src/main/AndroidManifest.xml` and 
 </application>
 ```
 
-### 3. Mediation Adapters
-Since this plugin uses "Mediation Only" mode, ensure you have configured your adapters correctly if you have additional manual requirements, although the `build.gradle` includes the core SDK.
+## Configuration
+
+### Manual Ad Networks
+By default, this plugin initializes the Appodeal SDK with the following adapters **excluded** to prevent tracking/compliance issues and size bloat:
+- `adjust`
+- `appsflyer`
+- `facebook_analytics`
+- `firebase` (This often includes AdMob/Google Ads components)
+
+If you need these adapters, you must manually add them to your app's `build.gradle` dependencies.
 
 ## Usage
 
