@@ -1,6 +1,6 @@
 {
   "name": "capacitor-appodeal",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Unofficial Appodeal Mediation Plugin for Capacitor",
   "author": "Israel Perales",
   "license": "MIT",
@@ -18,7 +18,13 @@
   "unpkg": "dist/plugin.js",
   "files": [
     "dist/",
-    "android/"
+    "android/src/",
+    "android/build.gradle",
+    "android/gradle/",
+    "android/gradlew",
+    "android/gradlew.bat",
+    "android/gradle.properties",
+    "android/settings.gradle"
   ],
   "scripts": {
     "verify": "npm run verify:android && npm run verify:web",

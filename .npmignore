@@ -1,0 +1,28 @@
+# Android build artifacts - MUST be excluded from npm package
+android/build/
+android/.gradle/
+android/local.properties
+android/*.iml
+android/.idea/
+android/.navigation/
+android/captures/
+android/.externalNativeBuild/
+
+# Development files
+node_modules/
+.github/
+doc/
+build_log*.txt
+
+# Test/coverage
+coverage/
+.nyc_output/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+Thumbs.db
+*.tgz
+.env*

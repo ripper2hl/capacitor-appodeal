@@ -62,4 +62,7 @@ dependencies {
         exclude group: 'com.appodeal.ads.sdk.services', module: 'facebook_analytics'
         exclude group: 'com.appodeal.ads.sdk.services', module: 'firebase'
     }
+
+    // Google Play Console Fix: Force Billing Library 8.0.0+ for August 2026 Policy
+    implementation "com.android.billingclient:billing:8.0.0"
 }
