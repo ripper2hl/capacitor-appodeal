@@ -17,6 +17,10 @@ build_log*.txt
 # Test/coverage
 coverage/
 .nyc_output/
+.scannerwork/
+test/
+android/src/test/
+sonar-project.properties
 
 # TypeScript build info
 *.tsbuildinfo

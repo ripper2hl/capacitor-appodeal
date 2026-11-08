@@ -1,6 +1,6 @@
 {
   "name": "capacitor-appodeal",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Unofficial Appodeal Mediation Plugin for Capacitor",
   "author": "Israel Perales",
   "license": "MIT",
@@ -18,7 +18,7 @@
   "unpkg": "dist/plugin.js",
   "files": [
     "dist/",
-    "android/src/",
+    "android/src/main/",
     "android/build.gradle",
     "android/gradle/",
     "android/gradlew",
@@ -30,10 +30,17 @@
     "verify": "npm run verify:android && npm run verify:web",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
     "verify:web": "npm run build",
+    "test": "npm run test:web && npm run test:android",
+    "test:web": "tsc --module commonjs --target es2017 --sourceMap --outDir coverage/cjs && node --enable-source-maps --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info test/appodeal.test.cjs",
+    "test:android": "cd android && ./gradlew testDebugUnitTest jacocoTestReport && cd ..",
+    "test:coverage": "npm run test:web && npm run test:android",
+    "sonar": "npm run test:coverage && npm run sonar:scan",
+    "sonar:scan": "[ -f .env ] && set -a && . ./.env && set +a; docker run --rm --network host -u $(id -u):$(id -g) -v \"$PWD:/usr/src:z\" -e SONAR_HOST_URL=http://127.0.0.1:9000 -e SONAR_TOKEN sonarsource/sonar-scanner-cli",
+    "sonar:issues": "[ -f .env ] && set -a && . ./.env && set +a; curl -s -u \"$SONAR_TOKEN:\" \"http://127.0.0.1:9000/api/issues/search?componentKeys=capacitor-appodeal&resolved=false&ps=500\" | jq '.issues[] | {severity, type, message, file: .component, line}'",
     "lint": "npm run eslint && npm run prettier -- --check",
     "fmt": "npm run eslint -- --fix && npm run prettier -- --write",
-    "eslint": "eslint . --ext ts",
-    "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
+    "eslint": "eslint src --ext ts",
+    "prettier": "prettier \"src/**/*.ts\" \"android/src/**/*.java\"",
     "docgen": "docgen --api AppodealPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf dist",
@@ -49,6 +56,10 @@
       "src": "android"
     }
   },
+  "eslintConfig": {
+    "extends": "@ionic/eslint-config/recommended"
+  },
+  "prettier": "@ionic/prettier-config",
   "peerDependencies": {
     "@capacitor/core": "^6.0.0"
   },
