@@ -190,7 +190,56 @@ def bidonBridges = [
     'taurusx'    : 'org.bidon:taurusx-adapter:1.12.2.0',
     'unity_ads'  : 'org.bidon:unityads-adapter:4.17.0.0',
     'vungle'     : 'org.bidon:vungle-adapter:7.7.4.0',
-    'yandex'     : 'org.bidon:yandex-adapter:7.17.0.0'
+    'yandex'     : 'org.bidon:yandex-adapter:7.17.0.0',
+    'zmaticoo'   : 'org.bidon:zmaticoo-adapter:2.0.7.1.0'
+]
+
+// AppLovin MAX mediation bridges (included automatically when both 'applovin_max' and the target network are enabled)
+def applovinMaxBridges = [
+    'admob'      : [
+        'com.applovin.mediation:google-ad-manager-adapter:25.2.0.0',
+        'com.applovin.mediation:google-adapter:25.2.0.0'
+    ],
+    'amazon'     : ['com.applovin.mediation:amazon-tam-adapter:11.3.1.0'],
+    'bidmachine' : ['com.applovin.mediation:bidmachine-adapter:3.7.1.0'],
+    'bigo_ads'   : ['com.applovin.mediation:bigoads-adapter:5.9.0.0'],
+    'chartboost' : ['com.applovin.mediation:chartboost-adapter:9.10.2.0'],
+    'dt_exchange': ['com.applovin.mediation:fyber-adapter:8.4.6.0'],
+    'inmobi'     : ['com.applovin.mediation:inmobi-adapter:11.3.0.1'],
+    'ironsource' : ['com.applovin.mediation:ironsource-adapter:9.4.4.0.0'],
+    'meta'       : ['com.applovin.mediation:facebook-adapter:6.21.0.0'],
+    'mintegral'  : ['com.applovin.mediation:mintegral-adapter:17.1.61.0'],
+    'mobilefuse' : ['com.applovin.mediation:mobilefuse-adapter:1.11.0.0'],
+    'moloco'     : ['com.applovin.mediation:moloco-adapter:4.3.1.0'],
+    'my_target'  : ['com.applovin.mediation:mytarget-adapter:5.47.1.0'],
+    'ogury'      : ['com.applovin.mediation:ogury-presage-adapter:6.2.0.0'],
+    'pangle'     : ['com.applovin.mediation:bytedance-adapter:8.1.0.3.0'],
+    'pubmatic'   : ['com.applovin.mediation:pubmatic-adapter:4.10.0.0'],
+    'smaato'     : ['com.applovin.mediation:smaato-adapter:22.7.2.3'],
+    'unity_ads'  : ['com.applovin.mediation:unityads-adapter:4.17.0.0'],
+    'verve'      : ['com.applovin.mediation:verve-adapter:3.7.1.0'],
+    'vungle'     : ['com.applovin.mediation:vungle-adapter:7.7.4.0'],
+    'yandex'     : ['com.applovin.mediation:yandex-adapter:7.17.0.0']
+]
+
+// LevelPlay (IronSource) mediation bridges (included automatically when both 'level_play' and the target network are enabled)
+def levelPlayBridges = [
+    'admob'      : 'com.unity3d.ads-mediation:admob-adapter:5.7.0',
+    'applovin'   : 'com.unity3d.ads-mediation:applovin-adapter:5.8.0',
+    'bidmachine' : 'com.unity3d.ads-mediation:bidmachine-adapter:5.7.0',
+    'bigo_ads'   : 'com.unity3d.ads-mediation:bigo-adapter:5.8.0',
+    'dt_exchange': 'com.unity3d.ads-mediation:fyber-adapter:5.9.0',
+    'inmobi'     : 'com.unity3d.ads-mediation:inmobi-adapter:5.7.0',
+    'meta'       : 'com.unity3d.ads-mediation:facebook-adapter:5.3.0',
+    'mintegral'  : 'com.unity3d.ads-mediation:mintegral-adapter:5.18.0',
+    'mobilefuse' : 'com.unity3d.ads-mediation:mobilefuse-adapter:5.3.0',
+    'moloco'     : 'com.unity3d.ads-mediation:moloco-adapter:5.6.0',
+    'my_target'  : 'com.unity3d.ads-mediation:mytarget-adapter:5.5.0',
+    'ogury'      : 'com.unity3d.ads-mediation:ogury-adapter:5.2.0',
+    'pangle'     : 'com.unity3d.ads-mediation:pangle-adapter:5.18.0',
+    'unity_ads'  : 'com.unity3d.ads-mediation:unityads-adapter:5.6.0',
+    'verve'      : 'com.unity3d.ads-mediation:verve-adapter:5.2.0',
+    'vungle'     : 'com.unity3d.ads-mediation:vungle-adapter:5.10.0'
 ]
 
 def resolveAdapterList = { String propName ->
@@ -259,6 +308,26 @@ dependencies {
     // Bidon network bridges (when 'bidon' is active)
     if (activeAdapters.contains('bidon')) {
         bidonBridges.each { String netName, String coordinate ->
+            if (activeAdapters.contains(netName) || netName == 'zmaticoo') {
+                implementation coordinate
+            }
+        }
+    }
+
+    // AppLovin MAX network bridges (when 'applovin_max' is active)
+    if (activeAdapters.contains('applovin_max')) {
+        applovinMaxBridges.each { String netName, List<String> coordinates ->
+            if (activeAdapters.contains(netName)) {
+                coordinates.each { String coordinate ->
+                    implementation coordinate
+                }
+            }
+        }
+    }
+
+    // LevelPlay network bridges (when 'level_play' is active)
+    if (activeAdapters.contains('level_play')) {
+        levelPlayBridges.each { String netName, String coordinate ->
             if (activeAdapters.contains(netName)) {
                 implementation coordinate
             }

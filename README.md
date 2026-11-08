@@ -75,6 +75,43 @@ Then reference it in `android/app/src/main/AndroidManifest.xml`:
 </application>
 ```
 
+### 4. Android — Google Play Location Permissions Policy *(Important)*
+
+Some ad network SDKs automatically merge `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` into your app's merged `AndroidManifest.xml`.
+
+**If your app does NOT use location for its own core functionality**, Google Play Console will reject your release unless you explicitly strip these permissions in your app's `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Remove location permissions merged by ad network SDKs if your app does not use geolocation -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+
+    <application ...>
+    </application>
+</manifest>
+```
+
+> **Note:** If your app **does** require geolocation (for example via `@capacitor/geolocation`), do **not** add `tools:node="remove"` and instead declare your location usage in the Google Play Data Safety form.
+
+### 5. Android — Optional AdMob Setup *(only if enabling `admob`)*
+
+`admob` is **excluded by default**. If you opt in via `appodealExtraAdapters = ['admob']`, you must add your AdMob `APPLICATION_ID` inside `<application>` in `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<meta-data
+    android:name="com.google.android.gms.ads.APPLICATION_ID"
+    android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
+```
+
+### 6. Google Play Data Safety & `app-ads.txt`
+
+Before publishing to Google Play:
+- Complete the **App Privacy / Data Safety** section in Google Play Console according to [Appodeal's Google Play Privacy Guide](https://docs.appodeal.com/android/data-protection/app-privacy-details).
+- Publish your `app-ads.txt` file on your developer website root domain to authorize ad inventory sales.
+
 ---
 
 ## Configuration — Ad Network Adapters (Appodeal 4.x Modular Architecture)
@@ -162,8 +199,8 @@ ext {
 | `admob` | `admob` | `25.2.0.0` | ❌ Excluded | Requires `APPLICATION_ID` in `AndroidManifest.xml` |
 | `admob_next_gen` | `admob_next_gen` | `1.4.0.0` | ❌ Excluded | Next-Gen Google Mobile Ads |
 | `amazon` | `amazon` | `12.0.0.0` | ❌ Excluded | Amazon APS (requires MobileAds or stub) |
-| `applovin_max` | `applovin_max` | `13.6.3.1` | ❌ Excluded | Secondary MAX mediation |
-| `level_play` | `level_play` | `9.4.4.0` | ❌ Excluded | Secondary LevelPlay mediation |
+| `applovin_max` | `applovin_max` | `13.6.3.1` | ❌ Excluded | Secondary MAX mediation (+ auto `com.applovin.mediation:*` bridges) |
+| `level_play` | `level_play` | `9.4.4.0` | ❌ Excluded | Secondary LevelPlay mediation (+ auto `com.unity3d.ads-mediation:*` bridges) |
 | `adjust` | `adjust` | `5.7.0.0` | ❌ Excluded | Attribution tracking |
 | `appsflyer` | `appsflyer` | `6.18.0.1` | ❌ Excluded | Attribution tracking |
 | `facebook_analytics` | `facebook_analytics` | `18.3.0.0` | ❌ Excluded | Meta analytics |
