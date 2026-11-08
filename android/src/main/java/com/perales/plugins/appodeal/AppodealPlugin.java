@@ -1,97 +1,162 @@
 package com.perales.plugins.appodeal;
 
+import android.util.Log;
 import com.appodeal.ads.Appodeal;
 import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
-import com.appodeal.ads.initializing.ApdInitializationCallback;
 import com.appodeal.ads.initializing.ApdInitializationError;
+import com.appodeal.ads.utils.Log.LogLevel;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import org.json.JSONException;
 
 @CapacitorPlugin(name = "Appodeal")
 public class AppodealPlugin extends Plugin implements BannerCallbacks, InterstitialCallbacks {
 
+    private static final String TAG = "AppodealPlugin";
+    private static final String KEY_AD_TYPES = "adTypes";
+    private static final String KEY_IS_PRECACHE = "isPrecache";
+
     @PluginMethod
     public void initialize(final PluginCall call) {
-        String appKey = call.getString("appKey");
-        Integer adTypes = call.getInt("adTypes");
-        Boolean testing = call.getBoolean("testing", false);
+        final String appKey = call.getString("appKey");
+        final Integer adTypes = call.getInt(KEY_AD_TYPES);
+        final boolean testing = Boolean.TRUE.equals(call.getBoolean("testing", false));
+        final List<String> disabledNetworks = extractStringList(call.getArray("disabledNetworks"));
 
-        if (appKey == null || adTypes == null) {
+        if (appKey == null || appKey.trim().isEmpty() || adTypes == null) {
             call.reject("Must provide appKey and adTypes");
             return;
         }
 
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        getActivity()
+            .runOnUiThread(() -> {
+                for (String network : disabledNetworks) {
+                    Appodeal.disableNetwork(network);
+                }
+
                 Appodeal.setTesting(testing);
-                Appodeal.initialize(getActivity(), appKey, adTypes, new ApdInitializationCallback() {
-                    @Override
-                    public void onInitializationFinished(List<ApdInitializationError> list) {
-                        // Check if list is empty or null for success?
-                        // The user just said "resuelve la promesa de JS cuando termine".
-                        // Usually implies success if callback is hit.
-                        JSObject ret = new JSObject();
-                        if (list != null && !list.isEmpty()) {
-                            // Log errors or return them? User asked for basic robust code.
-                            // We will simply resolve to indicate init finished, maybe pass error count.
-                            // But usually init is considered 'done'.
+                if (testing) {
+                    Log.w(TAG, "Appodeal initialized with testing=true. Ensure testing is disabled in production builds.");
+                    Appodeal.setLogLevel(LogLevel.verbose);
+                } else {
+                    Appodeal.setLogLevel(LogLevel.none);
+                }
+
+                Appodeal.setBannerCallbacks(AppodealPlugin.this);
+                Appodeal.setInterstitialCallbacks(AppodealPlugin.this);
+
+                Appodeal.initialize(
+                    getActivity(),
+                    appKey,
+                    adTypes,
+                    (List<ApdInitializationError> errors) -> {
+                        if (errors != null && !errors.isEmpty()) {
+                            for (ApdInitializationError error : errors) {
+                                Log.w(TAG, "Appodeal initialization warning: " + error.getMessage());
+                            }
                         }
-
-                        // Set callbacks
-                        Appodeal.setBannerCallbacks(AppodealPlugin.this);
-                        Appodeal.setInterstitialCallbacks(AppodealPlugin.this);
-
-                        call.resolve(ret);
+                        call.resolve(new JSObject());
                     }
-                });
-            }
-        });
+                );
+            });
+    }
+
+    @PluginMethod
+    public void disableNetwork(final PluginCall call) {
+        final String network = call.getString("network");
+        final Integer adTypes = call.getInt(KEY_AD_TYPES);
+
+        if (network == null || network.trim().isEmpty()) {
+            call.reject("Must provide network name");
+            return;
+        }
+
+        getActivity()
+            .runOnUiThread(() -> {
+                if (adTypes != null) {
+                    Appodeal.disableNetwork(network.trim(), adTypes);
+                } else {
+                    Appodeal.disableNetwork(network.trim());
+                }
+                call.resolve();
+            });
+    }
+
+    @PluginMethod
+    public void getNetworks(final PluginCall call) {
+        final Integer adTypes = call.getInt(KEY_AD_TYPES);
+        getActivity()
+            .runOnUiThread(() -> {
+                List<String> networks = (adTypes != null) ? Appodeal.getNetworks(adTypes) : Appodeal.getNetworks();
+                JSArray array = new JSArray();
+                if (networks != null) {
+                    for (String net : networks) {
+                        array.put(net);
+                    }
+                }
+                JSObject ret = new JSObject();
+                ret.put("networks", array);
+                call.resolve(ret);
+            });
     }
 
     @PluginMethod
     public void showBanner(final PluginCall call) {
-        // Default to BOTTOM (8) if not provided. Enums: BANNER_BOTTOM=8, BANNER_TOP=16
-        final int position = call.getInt("position", 8);
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        final Integer posOpt = call.getInt("position", Appodeal.BANNER_BOTTOM);
+        final int position = (posOpt != null) ? posOpt : Appodeal.BANNER_BOTTOM;
+        getActivity()
+            .runOnUiThread(() -> {
                 Appodeal.show(getActivity(), position);
                 call.resolve();
-            }
-        });
+            });
     }
 
     @PluginMethod
     public void hideBanner(final PluginCall call) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        getActivity()
+            .runOnUiThread(() -> {
                 Appodeal.hide(getActivity(), Appodeal.BANNER);
                 call.resolve();
-            }
-        });
+            });
     }
 
     @PluginMethod
     public void showInterstitial(final PluginCall call) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        getActivity()
+            .runOnUiThread(() -> {
                 if (Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
                     Appodeal.show(getActivity(), Appodeal.INTERSTITIAL);
                     call.resolve();
                 } else {
                     call.reject("Interstitial not loaded");
                 }
+            });
+    }
+
+    private static List<String> extractStringList(final JSArray array) {
+        if (array == null || array.length() == 0) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>(array.length());
+        for (int i = 0; i < array.length(); i++) {
+            try {
+                String value = array.getString(i);
+                if (value != null && !value.trim().isEmpty()) {
+                    result.add(value.trim());
+                }
+            } catch (JSONException ignored) {
+                // Skip non-string elements
             }
-        });
+        }
+        return result;
     }
 
     // BannerCallbacks
@@ -99,7 +164,7 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
     public void onBannerLoaded(int height, boolean isPrecache) {
         JSObject ret = new JSObject();
         ret.put("height", height);
-        ret.put("isPrecache", isPrecache);
+        ret.put(KEY_IS_PRECACHE, isPrecache);
         notifyListeners("onBannerLoaded", ret);
     }
 
@@ -125,14 +190,14 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
 
     @Override
     public void onBannerExpired() {
-        // notifyListeners("onBannerExpired", new JSObject());
+        // Appodeal SDK automatically handles refreshing expired banner ads.
     }
 
     // InterstitialCallbacks
     @Override
     public void onInterstitialLoaded(boolean isPrecache) {
         JSObject ret = new JSObject();
-        ret.put("isPrecache", isPrecache);
+        ret.put(KEY_IS_PRECACHE, isPrecache);
         notifyListeners("onInterstitialLoaded", ret);
     }
 
@@ -163,6 +228,6 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
 
     @Override
     public void onInterstitialExpired() {
-        // notifyListeners("onInterstitialExpired", new JSObject());
+        // Appodeal SDK automatically handles refreshing expired interstitial ads.
     }
 }

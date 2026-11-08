@@ -1,8 +1,9 @@
 ext {
-    junitVersion = project.hasProperty('junitVersion') ? project.getProperty('junitVersion') : '4.13.2'
-    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? project.getProperty('androidxAppCompatVersion') : '1.6.1'
-    androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? project.getProperty('androidxJunitVersion') : '1.1.5'
-    androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? project.getProperty('androidxEspressoCoreVersion') : '3.5.1'
+    junitVersion = project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.0'
+    androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? rootProject.ext.androidxJunitVersion : '1.2.1'
+    androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.6.1'
+    appodealCoreVersion = project.hasProperty('appodealCoreVersion') ? rootProject.ext.appodealCoreVersion : '4.4.0'
 }
 
 buildscript {
@@ -11,35 +12,78 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.1'
+        classpath 'com.android.tools.build:gradle:8.13.0'
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'jacoco'
 
 android {
     namespace "com.perales.plugins.appodeal"
-    compileSdkVersion project.hasProperty('compileSdkVersion') ? project.getProperty('compileSdkVersion') : 34
+    compileSdkVersion project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
     defaultConfig {
-        minSdkVersion project.hasProperty('minSdkVersion') ? project.getProperty('minSdkVersion') : 22
-        targetSdkVersion project.hasProperty('targetSdkVersion') ? project.getProperty('targetSdkVersion') : 34
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
         versionCode 1
-        versionName "1.0"
+        versionName "0.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
+        debug {
+            enableUnitTestCoverage true
+        }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    lintOptions {
+    lint {
         abortOnError false
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+                excludes = ['jdk.internal.*']
+            }
+        }
+    }
+}
+
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+    def fileFilter = [
+        '**/R.class',
+        '**/R$*.class',
+        '**/BuildConfig.*',
+        '**/Manifest*.*',
+        '**/*Test*.*',
+        'android/**/*.*'
+    ]
+    def debugTree = fileTree(
+        dir: "${buildDir}/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+        excludes: fileFilter
+    )
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+    executionData.setFrom(fileTree(dir: buildDir, includes: [
+        'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec',
+        'jacoco/testDebugUnitTest.exec'
+    ]))
 }
 
 repositories {
@@ -48,19 +92,177 @@ repositories {
     maven { url "https://artifactory.appodeal.com/appodeal" }
 }
 
+// ---------------------------------------------------------------------------
+// Appodeal 4.x Modular Adapter Catalog
+// ---------------------------------------------------------------------------
+def appodealAdapterCatalog = [
+    // Standard mediation networks (included by default)
+    'applovin'          : 'com.appodeal.ads.sdk.adapters:applovin:13.6.3.0',
+    'bidmachine'        : 'com.appodeal.ads.sdk.adapters:bidmachine:3.7.1.0',
+    'bidon'             : 'com.appodeal.ads.sdk.adapters:bidon:0.14.0.0',
+    'bigo_ads'          : 'com.appodeal.ads.sdk.adapters:bigo_ads:5.9.0.0',
+    'chartboost'        : 'com.appodeal.ads.sdk.adapters:chartboost:9.10.2.0',
+    'dt_exchange'       : 'com.appodeal.ads.sdk.adapters:dt_exchange:8.4.6.0',
+    'iab'               : 'com.appodeal.ads.sdk.adapters:iab:1.8.1.1',
+    'inmobi'            : 'com.appodeal.ads.sdk.adapters:inmobi:11.3.0.0',
+    'ironsource'        : 'com.appodeal.ads.sdk.adapters:ironsource:9.4.4.0',
+    'meta'              : 'com.appodeal.ads.sdk.adapters:meta:6.21.0.0',
+    'mintegral'         : 'com.appodeal.ads.sdk.adapters:mintegral:17.1.61.0',
+    'mobilefuse'        : 'com.appodeal.ads.sdk.adapters:mobilefuse:1.11.0.0',
+    'moloco'            : 'com.appodeal.ads.sdk.adapters:moloco:4.3.1.0',
+    'my_target'         : 'com.appodeal.ads.sdk.adapters:my_target:5.47.1.0',
+    'ogury'             : 'com.appodeal.ads.sdk.adapters:ogury:6.2.0.0',
+    'pangle'            : 'com.appodeal.ads.sdk.adapters:pangle:7.7.0.2.0',
+    'pubmatic'          : 'com.appodeal.ads.sdk.adapters:pubmatic:4.10.0.0',
+    'smaato'            : 'com.appodeal.ads.sdk.adapters:smaato:22.7.2.0',
+    'startio'           : 'com.appodeal.ads.sdk.adapters:startio:5.2.4.0',
+    'taurusx'           : 'com.appodeal.ads.sdk.adapters:taurusx:1.12.2.0',
+    'unity_ads'         : 'com.appodeal.ads.sdk.adapters:unity_ads:4.17.0.0',
+    'verve'             : 'com.appodeal.ads.sdk.adapters:verve:3.7.1.0',
+    'vungle'            : 'com.appodeal.ads.sdk.adapters:vungle:7.7.4.0',
+    'yandex'            : 'com.appodeal.ads.sdk.adapters:yandex:7.17.0.0',
+
+    // Opt-in adapters (excluded by default: require AndroidManifest keys, AdMob, or are analytics/attribution trackers)
+    'admob'             : 'com.appodeal.ads.sdk.adapters:admob:25.2.0.0',
+    'admob_next_gen'    : 'com.appodeal.ads.sdk.adapters:admob_next_gen:1.4.0.0',
+    'amazon'            : 'com.appodeal.ads.sdk.adapters:amazon:12.0.0.0',
+    'applovin_max'      : 'com.appodeal.ads.sdk.adapters:applovin_max:13.6.3.1',
+    'level_play'        : 'com.appodeal.ads.sdk.adapters:level_play:9.4.4.0',
+    'adjust'            : 'com.appodeal.ads.sdk.adapters:adjust:5.7.0.0',
+    'appsflyer'         : 'com.appodeal.ads.sdk.adapters:appsflyer:6.18.0.1',
+    'facebook_analytics': 'com.appodeal.ads.sdk.adapters:facebook_analytics:18.3.0.0',
+    'firebase'          : 'com.appodeal.ads.sdk.adapters:firebase:23.2.0.0',
+    'sentry_analytics'  : 'com.appodeal.ads.sdk.adapters:sentry_analytics:8.44.1.0'
+]
+
+def defaultIncludedAdapters = [
+    'applovin',
+    'bidmachine',
+    'bidon',
+    'bigo_ads',
+    'chartboost',
+    'dt_exchange',
+    'iab',
+    'inmobi',
+    'ironsource',
+    'meta',
+    'mintegral',
+    'mobilefuse',
+    'moloco',
+    'my_target',
+    'ogury',
+    'pangle',
+    'pubmatic',
+    'smaato',
+    'startio',
+    'taurusx',
+    'unity_ads',
+    'verve',
+    'vungle',
+    'yandex'
+] as Set<String>
+
+// BidMachine header-bidding network bridges (included automatically when both 'bidmachine' and the target network are enabled)
+def bidmachineBridges = [
+    'amazon'   : 'io.bidmachine:ads.networks.amazon:12.0.0.0',
+    'meta'     : 'io.bidmachine:ads.networks.meta_audience:6.21.0.1',
+    'mintegral': 'io.bidmachine:ads.networks.mintegral:17.1.61.1',
+    'my_target': 'io.bidmachine:ads.networks.my_target:5.47.1.2',
+    'vungle'   : 'io.bidmachine:ads.networks.vungle:7.7.4.0'
+]
+
+// Bidon mediation bridges (included automatically when both 'bidon' and the target network are enabled)
+def bidonBridges = [
+    'amazon'     : 'org.bidon:amazon-adapter:12.0.0.0',
+    'applovin'   : 'org.bidon:applovin-adapter:13.6.3.0',
+    'bidmachine' : 'org.bidon:bidmachine-adapter:3.7.1.1',
+    'bigo_ads'   : 'org.bidon:bigoads-adapter:5.9.0.0',
+    'chartboost' : 'org.bidon:chartboost-adapter:9.10.2.0',
+    'dt_exchange': 'org.bidon:dtexchange-adapter:8.4.6.0',
+    'inmobi'     : 'org.bidon:inmobi-adapter:11.3.0.0',
+    'ironsource' : 'org.bidon:ironsource-adapter:9.4.4.0',
+    'meta'       : 'org.bidon:meta-adapter:6.21.0.0',
+    'mintegral'  : 'org.bidon:mintegral-adapter:17.1.61.0',
+    'mobilefuse' : 'org.bidon:mobilefuse-adapter:1.11.0.0',
+    'moloco'     : 'org.bidon:moloco-adapter:4.3.1.0',
+    'my_target'  : 'org.bidon:vkads-adapter:5.47.1.0',
+    'startio'    : 'org.bidon:startio-adapter:5.2.4.1',
+    'taurusx'    : 'org.bidon:taurusx-adapter:1.12.2.0',
+    'unity_ads'  : 'org.bidon:unityads-adapter:4.17.0.0',
+    'vungle'     : 'org.bidon:vungle-adapter:7.7.4.0',
+    'yandex'     : 'org.bidon:yandex-adapter:7.17.0.0'
+]
+
+def resolveAdapterList = { String propName ->
+    def raw = null
+    if (rootProject.ext.has(propName)) {
+        raw = rootProject.ext.get(propName)
+    } else if (project.hasProperty(propName)) {
+        raw = project.property(propName)
+    }
+    if (raw == null) {
+        return null
+    }
+    if (raw instanceof Collection) {
+        return raw.collect { it.toString().trim() }.findAll { !it.isEmpty() } as Set<String>
+    }
+    return raw.toString().split(',').collect { it.trim() }.findAll { !it.isEmpty() } as Set<String>
+}
+
+def includedOverride = resolveAdapterList('appodealIncludedAdapters')
+def excludedOverride = resolveAdapterList('appodealExcludedAdapters')
+def extraOverride = resolveAdapterList('appodealExtraAdapters')
+
+Set<String> activeAdapters = new LinkedHashSet<>(
+    includedOverride != null ? includedOverride : defaultIncludedAdapters
+)
+if (extraOverride != null) {
+    activeAdapters.addAll(extraOverride)
+}
+if (excludedOverride != null) {
+    activeAdapters.removeAll(excludedOverride)
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':capacitor-android')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     testImplementation "junit:junit:$junitVersion"
+    testImplementation "org.mockito:mockito-core:5.11.0"
+    testImplementation "org.mockito:mockito-inline:5.2.0"
+    testImplementation "org.json:json:20231013"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
 
-    implementation('com.appodeal.ads:sdk:3.12.0.1') {
-        exclude group: 'com.appodeal.ads.sdk.services', module: 'adjust'
-        exclude group: 'com.appodeal.ads.sdk.services', module: 'appsflyer'
-        exclude group: 'com.appodeal.ads.sdk.services', module: 'facebook_analytics'
-        exclude group: 'com.appodeal.ads.sdk.services', module: 'firebase'
+    // Appodeal Core SDK 4.x
+    implementation "com.appodeal.ads.sdk:core:$appodealCoreVersion"
+
+    // Selected Appodeal Network Adapters
+    activeAdapters.each { String adapterName ->
+        def coordinate = appodealAdapterCatalog[adapterName]
+        if (coordinate != null) {
+            implementation coordinate
+        } else {
+            logger.warn("[capacitor-appodeal] Unknown adapter '${adapterName}' in configuration. Available: ${appodealAdapterCatalog.keySet()}")
+        }
+    }
+
+    // BidMachine network bridges (when 'bidmachine' is active)
+    if (activeAdapters.contains('bidmachine')) {
+        bidmachineBridges.each { String netName, String coordinate ->
+            if (activeAdapters.contains(netName)) {
+                implementation coordinate
+            }
+        }
+    }
+
+    // Bidon network bridges (when 'bidon' is active)
+    if (activeAdapters.contains('bidon')) {
+        bidonBridges.each { String netName, String coordinate ->
+            if (activeAdapters.contains(netName)) {
+                implementation coordinate
+            }
+        }
     }
 
     // Google Play Console Fix: Force Billing Library 8.0.0+ for August 2026 Policy
