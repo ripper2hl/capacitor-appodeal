@@ -42,6 +42,10 @@ export class AppodealWeb extends WebPlugin implements AppodealPlugin {
     console.log('AppodealWeb: showInterstitial');
   }
 
+  async showRewardedVideo(): Promise<void> {
+    console.log('AppodealWeb: showRewardedVideo');
+  }
+
   // Satisfy TypeScript: web mock fires no events.
   // The real implementations are native-only.
   async removeAllListeners(): Promise<void> {

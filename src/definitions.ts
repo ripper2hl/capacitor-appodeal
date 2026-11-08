@@ -70,6 +70,23 @@ export interface InterstitialLoadedEvent {
   isPrecache: boolean;
 }
 
+export interface RewardedVideoLoadedEvent {
+  /** Whether this is a pre-cached ad. */
+  isPrecache: boolean;
+}
+
+export interface RewardedVideoFinishedEvent {
+  /** Reward amount configured in the Appodeal dashboard. */
+  amount: number;
+  /** Reward currency name configured in the Appodeal dashboard. */
+  currency: string;
+}
+
+export interface RewardedVideoClosedEvent {
+  /** Whether the user watched the rewarded video completely before closing. */
+  isFinished: boolean;
+}
+
 /** Generic empty payload for events that carry no data. */
 export type EmptyEvent = Record<string, never>;
 
@@ -132,6 +149,13 @@ export interface AppodealPlugin {
    */
   showInterstitial(): Promise<void>;
 
+  /**
+   * Show a rewarded video ad.
+   * Rejects if the rewarded video is not loaded yet — listen to
+   * `onRewardedVideoLoaded` before calling this.
+   */
+  showRewardedVideo(): Promise<void>;
+
   // ── Banner listeners ────────────────────────────────────────────────────
 
   addListener(
@@ -189,6 +213,43 @@ export interface AppodealPlugin {
   addListener(
     eventName: 'onInterstitialClosed',
     listenerFunc: (event: EmptyEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  // ── Rewarded Video listeners ─────────────────────────────────────────────
+
+  addListener(
+    eventName: 'onRewardedVideoLoaded',
+    listenerFunc: (event: RewardedVideoLoadedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoFailedToLoad',
+    listenerFunc: (event: EmptyEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoShown',
+    listenerFunc: (event: EmptyEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoShowFailed',
+    listenerFunc: (event: EmptyEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoClicked',
+    listenerFunc: (event: EmptyEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoFinished',
+    listenerFunc: (event: RewardedVideoFinishedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  addListener(
+    eventName: 'onRewardedVideoClosed',
+    listenerFunc: (event: RewardedVideoClosedEvent) => void,
   ): Promise<PluginListenerHandle>;
 
   /** Catch-all overload for custom event names. */

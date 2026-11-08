@@ -4,6 +4,7 @@ import android.util.Log;
 import com.appodeal.ads.Appodeal;
 import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
+import com.appodeal.ads.RewardedVideoCallbacks;
 import com.appodeal.ads.initializing.ApdInitializationError;
 import com.appodeal.ads.utils.Log.LogLevel;
 import com.getcapacitor.JSArray;
@@ -18,7 +19,7 @@ import java.util.List;
 import org.json.JSONException;
 
 @CapacitorPlugin(name = "Appodeal")
-public class AppodealPlugin extends Plugin implements BannerCallbacks, InterstitialCallbacks {
+public class AppodealPlugin extends Plugin implements BannerCallbacks, InterstitialCallbacks, RewardedVideoCallbacks {
 
     private static final String TAG = "AppodealPlugin";
     private static final String KEY_AD_TYPES = "adTypes";
@@ -52,6 +53,7 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
 
                 Appodeal.setBannerCallbacks(AppodealPlugin.this);
                 Appodeal.setInterstitialCallbacks(AppodealPlugin.this);
+                Appodeal.setRewardedVideoCallbacks(AppodealPlugin.this);
 
                 Appodeal.initialize(
                     getActivity(),
@@ -137,6 +139,19 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
                     call.resolve();
                 } else {
                     call.reject("Interstitial not loaded");
+                }
+            });
+    }
+
+    @PluginMethod
+    public void showRewardedVideo(final PluginCall call) {
+        getActivity()
+            .runOnUiThread(() -> {
+                if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)) {
+                    Appodeal.show(getActivity(), Appodeal.REWARDED_VIDEO);
+                    call.resolve();
+                } else {
+                    call.reject("Rewarded video not loaded");
                 }
             });
     }
@@ -229,5 +244,53 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
     @Override
     public void onInterstitialExpired() {
         // Appodeal SDK automatically handles refreshing expired interstitial ads.
+    }
+
+    // RewardedVideoCallbacks
+    @Override
+    public void onRewardedVideoLoaded(boolean isPrecache) {
+        JSObject ret = new JSObject();
+        ret.put(KEY_IS_PRECACHE, isPrecache);
+        notifyListeners("onRewardedVideoLoaded", ret);
+    }
+
+    @Override
+    public void onRewardedVideoFailedToLoad() {
+        notifyListeners("onRewardedVideoFailedToLoad", new JSObject());
+    }
+
+    @Override
+    public void onRewardedVideoShown() {
+        notifyListeners("onRewardedVideoShown", new JSObject());
+    }
+
+    @Override
+    public void onRewardedVideoShowFailed() {
+        notifyListeners("onRewardedVideoShowFailed", new JSObject());
+    }
+
+    @Override
+    public void onRewardedVideoClicked() {
+        notifyListeners("onRewardedVideoClicked", new JSObject());
+    }
+
+    @Override
+    public void onRewardedVideoFinished(double amount, String name) {
+        JSObject ret = new JSObject();
+        ret.put("amount", amount);
+        ret.put("currency", name != null ? name : "");
+        notifyListeners("onRewardedVideoFinished", ret);
+    }
+
+    @Override
+    public void onRewardedVideoClosed(boolean finished) {
+        JSObject ret = new JSObject();
+        ret.put("isFinished", finished);
+        notifyListeners("onRewardedVideoClosed", ret);
+    }
+
+    @Override
+    public void onRewardedVideoExpired() {
+        // Appodeal SDK automatically handles refreshing expired rewarded video ads.
     }
 }
