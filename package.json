@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "verify": "npm run verify:android && npm run verify:web",
-    "verify:android": "cd android && ./gradlew clean build test && cd ..",
+    "verify:android": "cd android && ./gradlew clean build test jacocoTestReport && cd ..",
     "verify:web": "npm run build",
     "test": "npm run test:web && npm run test:android",
     "test:web": "tsc --module commonjs --target es2017 --sourceMap --outDir coverage/cjs && node --enable-source-maps --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info test/appodeal.test.cjs",
