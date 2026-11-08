@@ -102,17 +102,27 @@ By default, this plugin includes the full **Step 1 Appodeal 4.4.0 Mediation Bund
 
 Depending on whether you use AdMob in your app, choose **one** of the two options below:
 
-#### Option A — You DO use AdMob
-Add your AdMob `APPLICATION_ID` inside `<application>` in `android/app/src/main/AndroidManifest.xml`:
+#### Option A — You DO use AdMob (How to configure it)
+Keep the default adapters and add your AdMob `APPLICATION_ID` inside `<application>` in `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
-<meta-data
-    android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
-```
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:networkSecurityConfig="@xml/network_security_config"
+        ...>
 
-#### Option B — You DO NOT use AdMob (Remove AdMob without `<meta-data>`)
-If you don't use AdMob (or don't want to configure `com.google.android.gms.ads.APPLICATION_ID`), simply exclude `admob` in your app's `android/variables.gradle` (or use `appodealIncludedAdapters` to whitelist only your active networks):
+        <!-- Required by AdMob adapter -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy" />
+
+    </application>
+</manifest>
+```
+*(Don't forget to sync your AdMob account with the [Appodeal AdMob Sync tool](https://amsa-updates.appodeal.com/)).*
+
+#### Option B — You DO NOT use AdMob (How to remove it)
+If you don't use AdMob (or don't want to add `com.google.android.gms.ads.APPLICATION_ID`), exclude `admob` in `android/variables.gradle` (or use `appodealIncludedAdapters` to whitelist only your active networks):
 
 ```groovy
 // android/variables.gradle
@@ -210,7 +220,7 @@ ext {
 | `ogury` | `ogury` | `6.2.0.0` | ✅ Included (Step 1) | Ogury |
 | `pangle` | `pangle` | `7.7.0.2.0` | ✅ Included (Step 1) | Pangle (TikTok) |
 | `pubmatic` | `pubmatic` | `4.10.0.0` | ✅ Included (Step 1) | PubMatic |
-| `sentry_analytics` | `sentry_analytics` | `8.4.1.0` (`8.44.1.0`) | ✅ Included (Step 1) | Sentry crash reporting |
+| `sentry_analytics` | `sentry_analytics` | `8.44.1.0` | ✅ Included (Step 1) | Sentry crash reporting |
 | `smaato` | `smaato` | `22.7.2.0` | ✅ Included (Step 1) | Smaato |
 | `startio` | `startio` | `5.2.4.0` | ✅ Included (Step 1) | Start.io |
 | `taurusx` | `taurusx` | `1.12.2.0` | ✅ Included (Step 1) | TaurusX |
