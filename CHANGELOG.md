@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AppodealNetwork` enum in TypeScript with all 28 ad network identifiers.
 - `disableNetwork({ network, adTypes? })` method and `disabledNetworks?: string[]` option in `initialize()` for runtime network control before initialization.
 - `getNetworks({ adTypes? })` method to inspect active networks at runtime.
+- **Rewarded Video support:** `showRewardedVideo()` method (rejects if not loaded) and all 7 native callbacks (`onRewardedVideoLoaded`, `onRewardedVideoFailedToLoad`, `onRewardedVideoShown`, `onRewardedVideoShowFailed`, `onRewardedVideoClicked`, `onRewardedVideoFinished` with `{ amount, currency }`, and `onRewardedVideoClosed` with `{ isFinished }`), plus typed interfaces (`RewardedVideoLoadedEvent`, `RewardedVideoFinishedEvent`, `RewardedVideoClosedEvent`).
 - Unit test suite for both Android (`JUnit` + `Mockito` + `JaCoCo`) and Web/TypeScript (`node:test` + LCOV) integrated with SonarQube (`sonar-project.properties`).
 
 ### Changed

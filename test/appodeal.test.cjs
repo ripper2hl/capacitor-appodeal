@@ -51,6 +51,7 @@ test('AppodealWeb methods execute and enforce testing=false by default', async (
     await web.showBanner({ position: AppodealAdType.BANNER_TOP });
     await web.hideBanner();
     await web.showInterstitial();
+    await web.showRewardedVideo();
     await web.removeAllListeners();
 
     await Appodeal.hideBanner();

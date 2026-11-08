@@ -251,7 +251,10 @@ import { environment } from '../environments/environment';
 
 await Appodeal.initialize({
   appKey: 'YOUR_APP_KEY',
-  adTypes: AppodealAdType.BANNER | AppodealAdType.INTERSTITIAL,
+  adTypes:
+    AppodealAdType.BANNER |
+    AppodealAdType.INTERSTITIAL |
+    AppodealAdType.REWARDED_VIDEO,
   testing: !environment.production, // false in production builds!
   // Optional: disable specific networks at runtime before initialization
   disabledNetworks: [AppodealNetwork.META, AppodealNetwork.YANDEX],
@@ -309,6 +312,22 @@ try {
 }
 ```
 
+### Rewarded Video
+
+Include `AppodealAdType.REWARDED_VIDEO` when calling `initialize()`, listen for reward completion via `onRewardedVideoFinished`, and show the video when ready:
+
+```typescript
+Appodeal.addListener('onRewardedVideoFinished', ({ amount, currency }) => {
+  console.log(`User earned ${amount} ${currency}`);
+});
+
+try {
+  await Appodeal.showRewardedVideo();
+} catch {
+  console.warn('Rewarded video not ready yet');
+}
+```
+
 ### Listeners
 
 ```typescript
@@ -331,6 +350,21 @@ Appodeal.addListener('onInterstitialShowFailed', () => { /* ... */ });
 Appodeal.addListener('onInterstitialClicked', () => { /* ... */ });
 Appodeal.addListener('onInterstitialClosed', () => { /* ... */ });
 
+// Rewarded Video events
+Appodeal.addListener('onRewardedVideoLoaded', ({ isPrecache }) => {
+  console.log('Rewarded video ready, precache:', isPrecache);
+});
+Appodeal.addListener('onRewardedVideoFailedToLoad', () => { /* ... */ });
+Appodeal.addListener('onRewardedVideoShown', () => { /* ... */ });
+Appodeal.addListener('onRewardedVideoShowFailed', () => { /* ... */ });
+Appodeal.addListener('onRewardedVideoClicked', () => { /* ... */ });
+Appodeal.addListener('onRewardedVideoFinished', ({ amount, currency }) => {
+  console.log('Reward granted:', amount, currency);
+});
+Appodeal.addListener('onRewardedVideoClosed', ({ isFinished }) => {
+  console.log('Rewarded video closed, finished:', isFinished);
+});
+
 // Clean up all listeners at once
 await Appodeal.removeAllListeners();
 ```
@@ -349,6 +383,7 @@ await Appodeal.removeAllListeners();
 | `showBanner(options?)` | `Promise<void>` | Show banner ad (`position`: `BANNER_BOTTOM` or `BANNER_TOP`) |
 | `hideBanner()` | `Promise<void>` | Hide banner ad |
 | `showInterstitial()` | `Promise<void>` | Show interstitial (rejects if not loaded) |
+| `showRewardedVideo()` | `Promise<void>` | Show rewarded video (rejects if not loaded) |
 | `addListener(event, fn)` | `Promise<PluginListenerHandle>` | Register an event listener |
 | `removeAllListeners()` | `Promise<void>` | Remove all event listeners |
 
@@ -388,6 +423,18 @@ await Appodeal.removeAllListeners();
 | `onInterstitialShowFailed` | `{}` | Ad loaded but failed to display |
 | `onInterstitialClicked` | `{}` | User tapped the ad |
 | `onInterstitialClosed` | `{}` | User dismissed the ad |
+
+#### Rewarded Video
+
+| Event | Payload | Description |
+| :--- | :--- | :--- |
+| `onRewardedVideoLoaded` | `{ isPrecache: boolean }` | Ad ready to show |
+| `onRewardedVideoFailedToLoad` | `{}` | Ad failed to load |
+| `onRewardedVideoShown` | `{}` | Ad playback started |
+| `onRewardedVideoShowFailed` | `{}` | Ad loaded but failed to display |
+| `onRewardedVideoClicked` | `{}` | User tapped the ad |
+| `onRewardedVideoFinished` | `{ amount: number, currency: string }` | User completed watching and earned reward |
+| `onRewardedVideoClosed` | `{ isFinished: boolean }` | User dismissed the ad (`isFinished` indicates completion) |
 
 ---
 

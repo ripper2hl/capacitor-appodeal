@@ -111,6 +111,7 @@ public class AppodealPluginTest {
             appodealMock.verify(() -> Appodeal.setLogLevel(LogLevel.none));
             appodealMock.verify(() -> Appodeal.setBannerCallbacks(plugin));
             appodealMock.verify(() -> Appodeal.setInterstitialCallbacks(plugin));
+            appodealMock.verify(() -> Appodeal.setRewardedVideoCallbacks(plugin));
             verify(call).resolve(any(JSObject.class));
         }
     }
@@ -286,6 +287,30 @@ public class AppodealPluginTest {
     }
 
     @Test
+    public void showRewardedVideo_showsWhenLoaded() {
+        try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
+            appodealMock.when(() -> Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)).thenReturn(true);
+
+            plugin.showRewardedVideo(call);
+
+            appodealMock.verify(() -> Appodeal.show(activity, Appodeal.REWARDED_VIDEO));
+            verify(call).resolve();
+        }
+    }
+
+    @Test
+    public void showRewardedVideo_rejectsWhenNotLoaded() {
+        try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
+            appodealMock.when(() -> Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)).thenReturn(false);
+
+            plugin.showRewardedVideo(call);
+
+            appodealMock.verify(() -> Appodeal.show(any(), anyInt()), never());
+            verify(call).reject("Rewarded video not loaded");
+        }
+    }
+
+    @Test
     public void callbacks_emitExpectedEvents() {
         plugin.onBannerLoaded(50, true);
         plugin.onBannerFailedToLoad();
@@ -301,6 +326,16 @@ public class AppodealPluginTest {
         plugin.onInterstitialClicked();
         plugin.onInterstitialClosed();
         plugin.onInterstitialExpired();
+
+        plugin.onRewardedVideoLoaded(true);
+        plugin.onRewardedVideoFailedToLoad();
+        plugin.onRewardedVideoShown();
+        plugin.onRewardedVideoShowFailed();
+        plugin.onRewardedVideoClicked();
+        plugin.onRewardedVideoFinished(10.0, "coins");
+        plugin.onRewardedVideoFinished(5.0, null);
+        plugin.onRewardedVideoClosed(true);
+        plugin.onRewardedVideoExpired();
 
         // Verify no exceptions thrown during callback execution
         assertNotNull(plugin);
