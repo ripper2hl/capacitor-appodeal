@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.0] - 2026-11-08
+
+### Added
+- **Appodeal SDK 4.x Modular Adapter Architecture:** Full catalog of 34 official Appodeal `4.4.0` adapters (`com.appodeal.ads.sdk.adapters:*`) configurable at compile-time via `appodealIncludedAdapters` (whitelist), `appodealExcludedAdapters` (blacklist), and `appodealExtraAdapters` (opt-in) in `android/variables.gradle` or `android/gradle.properties`.
+- Automatic resolution of BidMachine (`io.bidmachine:ads.networks.*`) and Bidon (`org.bidon:*-adapter`) mediation bridges when active alongside their respective demand networks.
+- `AppodealNetwork` enum in TypeScript with all 28 ad network identifiers.
+- `disableNetwork({ network, adTypes? })` method and `disabledNetworks?: string[]` option in `initialize()` for runtime network control before initialization.
+- `getNetworks({ adTypes? })` method to inspect active networks at runtime.
+- Unit test suite for both Android (`JUnit` + `Mockito` + `JaCoCo`) and Web/TypeScript (`node:test` + LCOV) integrated with SonarQube (`sonar-project.properties`).
+
+### Changed
+- **BREAKING (Android minSdk):** Migrated native Android dependency from legacy monolithic `com.appodeal.ads:sdk:3.12.0.1` to modular `com.appodeal.ads.sdk:core:4.4.0`. Minimum supported Android API level is now **24 (Android 7.0)**.
+- Default `compileSdkVersion` and `targetSdkVersion` updated to `36` with Gradle `8.14.3` and Android Gradle Plugin `8.13.0` (16 KB page size compatible).
+- `admob`, `admob_next_gen`, `amazon`, `applovin_max`, `level_play`, `adjust`, `appsflyer`, `facebook_analytics`, `firebase`, and `sentry_analytics` are excluded by default and available via `appodealExtraAdapters` or `appodealIncludedAdapters`.
+- Hardened `testing` flag in `initialize()` to strictly default to `false` with explicit log level management (`LogLevel.none` in production, warning + `LogLevel.verbose` when `testing: true`).
+
+---
+
 ## [0.0.3] - 2026-09-20
 
 ### Added

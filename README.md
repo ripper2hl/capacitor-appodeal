@@ -11,15 +11,16 @@
 
 | Platform | Supported | SDK Version | Notes |
 | :--- | :---: | :---: | :--- |
-| **Android** | ✅ | `3.12.0.1` | Native implementation |
+| **Android** | ✅ | `4.4.0` | Native modular implementation (`minSdk 24`) |
 | **Web** | ✅ | Mock | Development/Testing only |
 | **iOS** | ❌ | — | Not implemented yet |
 
 ## Compatibility
 
-| Plugin Version | Capacitor Version |
-| :--- | :--- |
-| `0.0.x` | `^6.0.0` |
+| Plugin Version | Capacitor Version | Appodeal Android SDK | Min Android API |
+| :--- | :--- | :--- | :---: |
+| `0.1.x` | `^6.0.0` (compatible with 6–8) | `4.4.0` (Modular) | `24` (Android 7.0) |
+| `0.0.x` | `^6.0.0` | `3.12.0.1` (Legacy bundle) | `22` |
 
 ---
 
@@ -76,37 +77,138 @@ Then reference it in `android/app/src/main/AndroidManifest.xml`:
 
 ---
 
-## Configuration
+## Configuration — Ad Network Adapters (Appodeal 4.x Modular Architecture)
 
-### Excluded ad network adapters
+Starting in **v0.1.0 (Appodeal SDK 4.4.0)**, ad network adapters are completely modular. You can control which networks are compiled into your Android APK/AAB via your app's `android/variables.gradle` (or `android/gradle.properties`) **without modifying the plugin**, and you can also disable networks at runtime from TypeScript.
 
-By default the following adapters are **excluded** to avoid compliance/tracking issues and reduce APK size:
+### 1. Compile-Time Adapter Selection (`android/variables.gradle`)
 
-| Adapter | Reason excluded |
-| :--- | :--- |
-| `adjust` | Analytics/attribution tracking |
-| `appsflyer` | Analytics/attribution tracking |
-| `facebook_analytics` | Meta tracking |
-| `firebase` | Includes AdMob/Google Ads components |
+#### Mode A — Whitelist (`appodealIncludedAdapters`) *(Recommended for Production)*
+Compile **only** the exact ad networks that provide demand for your app. This minimizes APK/AAB size and avoids bundling unused SDKs:
 
-If you need any of these, add them manually to your app's `android/app/build.gradle`.
+```groovy
+// android/variables.gradle
+ext {
+    minSdkVersion = 24
+    compileSdkVersion = 36
+    targetSdkVersion = 36
+    // ...
+
+    // Only these networks (plus automatic BidMachine/Bidon bridges if included) will be compiled:
+    appodealIncludedAdapters = [
+        'applovin',
+        'unity_ads',
+        'vungle',
+        'mintegral',
+        'dt_exchange',
+        'inmobi',
+        'bidmachine',
+        'iab'
+    ]
+}
+```
+
+#### Mode B — Exclude Specific Networks (`appodealExcludedAdapters`)
+Start with the default included networks and remove specific ones:
+
+```groovy
+// android/variables.gradle
+ext {
+    appodealExcludedAdapters = ['yandex', 'my_target', 'meta']
+}
+```
+
+#### Mode C — Opt-In Extra Adapters (`appodealExtraAdapters`)
+Add adapters that are excluded by default (such as `admob` or analytics trackers):
+
+```groovy
+// android/variables.gradle
+ext {
+    appodealExtraAdapters = ['admob']
+}
+```
+
+> **Tip:** You can also pass comma-separated strings in `android/gradle.properties`, e.g.:
+> `appodealIncludedAdapters=applovin,unity_ads,vungle,mintegral,dt_exchange,inmobi,bidmachine,iab`
+
+### 2. Full Adapter Catalog (Appodeal SDK `4.4.0`)
+
+| Adapter Key (`AppodealNetwork`) | Maven Artifact (`com.appodeal.ads.sdk.adapters:*`) | Version | Default State | Notes |
+| :--- | :--- | :---: | :---: | :--- |
+| `applovin` | `applovin` | `13.6.3.0` | ✅ Included | AppLovin SDK |
+| `unity_ads` | `unity_ads` | `4.17.0.0` | ✅ Included | Unity Ads |
+| `vungle` | `vungle` | `7.7.4.0` | ✅ Included | Liftoff Monetize (Vungle) |
+| `mintegral` | `mintegral` | `17.1.61.0` | ✅ Included | Mintegral |
+| `dt_exchange` | `dt_exchange` | `8.4.6.0` | ✅ Included | DT Exchange (Fyber) |
+| `inmobi` | `inmobi` | `11.3.0.0` | ✅ Included | InMobi |
+| `bidmachine` | `bidmachine` | `3.7.1.0` | ✅ Included | BidMachine (+ auto bridges for active networks) |
+| `iab` | `iab` | `1.8.1.1` | ✅ Included | IAB MRAID / VAST / NAST |
+| `bidon` | `bidon` | `0.14.0.0` | ✅ Included | Bidon mediation (+ auto bridges) |
+| `bigo_ads` | `bigo_ads` | `5.9.0.0` | ✅ Included | Bigo Ads |
+| `chartboost` | `chartboost` | `9.10.2.0` | ✅ Included | Chartboost |
+| `ironsource` | `ironsource` | `9.4.4.0` | ✅ Included | IronSource |
+| `meta` | `meta` | `6.21.0.0` | ✅ Included | Meta Audience Network |
+| `mobilefuse` | `mobilefuse` | `1.11.0.0` | ✅ Included | MobileFuse |
+| `moloco` | `moloco` | `4.3.1.0` | ✅ Included | Moloco |
+| `my_target` | `my_target` | `5.47.1.0` | ✅ Included | myTarget (VK Ads) |
+| `ogury` | `ogury` | `6.2.0.0` | ✅ Included | Ogury |
+| `pangle` | `pangle` | `7.7.0.2.0` | ✅ Included | Pangle (TikTok) |
+| `pubmatic` | `pubmatic` | `4.10.0.0` | ✅ Included | PubMatic |
+| `smaato` | `smaato` | `22.7.2.0` | ✅ Included | Smaato |
+| `startio` | `startio` | `5.2.4.0` | ✅ Included | Start.io |
+| `taurusx` | `taurusx` | `1.12.2.0` | ✅ Included | TaurusX |
+| `verve` | `verve` | `3.7.1.0` | ✅ Included | Verve |
+| `yandex` | `yandex` | `7.17.0.0` | ✅ Included | Yandex Ads |
+| `admob` | `admob` | `25.2.0.0` | ❌ Excluded | Requires `APPLICATION_ID` in `AndroidManifest.xml` |
+| `admob_next_gen` | `admob_next_gen` | `1.4.0.0` | ❌ Excluded | Next-Gen Google Mobile Ads |
+| `amazon` | `amazon` | `12.0.0.0` | ❌ Excluded | Amazon APS (requires MobileAds or stub) |
+| `applovin_max` | `applovin_max` | `13.6.3.1` | ❌ Excluded | Secondary MAX mediation |
+| `level_play` | `level_play` | `9.4.4.0` | ❌ Excluded | Secondary LevelPlay mediation |
+| `adjust` | `adjust` | `5.7.0.0` | ❌ Excluded | Attribution tracking |
+| `appsflyer` | `appsflyer` | `6.18.0.1` | ❌ Excluded | Attribution tracking |
+| `facebook_analytics` | `facebook_analytics` | `18.3.0.0` | ❌ Excluded | Meta analytics |
+| `firebase` | `firebase` | `23.2.0.0` | ❌ Excluded | Firebase / Google Ads components |
+| `sentry_analytics` | `sentry_analytics` | `8.44.1.0` | ❌ Excluded | Sentry crash reporting |
 
 ---
 
 ## Usage
 
-### Initialize
+### Initialize (and Safe Test Mode)
 
 Call `initialize` once, early in your app lifecycle (e.g., `AppComponent` constructor or `app.component.ts`).
 
+> **⚠️ Important — Avoid Test Ads in Production:**
+> `testing` defaults to `false`. Always bind `testing` to your framework's build environment (e.g. `!environment.production`) so you never accidentally ship `testing: true` to Google Play.
+
 ```typescript
-import { Appodeal, AppodealAdType } from 'capacitor-appodeal';
+import { Appodeal, AppodealAdType, AppodealNetwork } from 'capacitor-appodeal';
+import { environment } from '../environments/environment';
 
 await Appodeal.initialize({
   appKey: 'YOUR_APP_KEY',
   adTypes: AppodealAdType.BANNER | AppodealAdType.INTERSTITIAL,
-  testing: true, // omit or set false in production
+  testing: !environment.production, // false in production builds!
+  // Optional: disable specific networks at runtime before initialization
+  disabledNetworks: [AppodealNetwork.META, AppodealNetwork.YANDEX],
 });
+```
+
+### Runtime Network Management (`disableNetwork` / `getNetworks`)
+
+```typescript
+// Disable a network for all ad types (call BEFORE initialize)
+await Appodeal.disableNetwork({ network: AppodealNetwork.MY_TARGET });
+
+// Disable a network only for banners (call BEFORE initialize)
+await Appodeal.disableNetwork({
+  network: AppodealNetwork.INMOBI,
+  adTypes: AppodealAdType.BANNER,
+});
+
+// Inspect registered networks
+const { networks } = await Appodeal.getNetworks();
+console.log('Active Appodeal networks:', networks);
 ```
 
 ### Banner
@@ -177,8 +279,10 @@ await Appodeal.removeAllListeners();
 
 | Method | Returns | Description |
 | :--- | :--- | :--- |
-| `initialize(options)` | `Promise<void>` | Initialize the SDK |
-| `showBanner(options?)` | `Promise<void>` | Show banner ad |
+| `initialize(options)` | `Promise<void>` | Initialize the SDK (`appKey`, `adTypes`, optional `testing`, optional `disabledNetworks`) |
+| `disableNetwork(options)` | `Promise<void>` | Disable an ad network before initialization (`network`, optional `adTypes`) |
+| `getNetworks(options?)` | `Promise<{ networks: string[] }>` | Get registered ad networks (optional `adTypes` filter) |
+| `showBanner(options?)` | `Promise<void>` | Show banner ad (`position`: `BANNER_BOTTOM` or `BANNER_TOP`) |
 | `hideBanner()` | `Promise<void>` | Hide banner ad |
 | `showInterstitial()` | `Promise<void>` | Show interstitial (rejects if not loaded) |
 | `addListener(event, fn)` | `Promise<PluginListenerHandle>` | Register an event listener |
@@ -188,10 +292,12 @@ await Appodeal.removeAllListeners();
 
 | Value | Constant | Notes |
 | :---: | :--- | :--- |
+| `0` | `NONE` | |
 | `3` | `INTERSTITIAL` | |
 | `4` | `BANNER` | |
 | `8` | `BANNER_BOTTOM` | Use with `showBanner()` |
 | `16` | `BANNER_TOP` | Use with `showBanner()` |
+| `64` | `BANNER_VIEW` | |
 | `128` | `REWARDED_VIDEO` / `NON_SKIPPABLE_VIDEO` | Same value in the Appodeal SDK |
 | `256` | `MREC` | |
 | `512` | `NATIVE` | |
