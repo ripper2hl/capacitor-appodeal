@@ -135,37 +135,83 @@ def appodealAdapterCatalog = [
     'firebase'          : 'com.appodeal.ads.sdk.adapters:firebase:23.2.0.0'
 ]
 
-def defaultIncludedAdapters = [
-    'admob',
-    'amazon',
-    'applovin',
-    'applovin_max',
-    'bidmachine',
-    'bidon',
-    'bigo_ads',
-    'chartboost',
-    'dt_exchange',
-    'iab',
-    'inmobi',
-    'ironsource',
-    'level_play',
-    'meta',
-    'mintegral',
-    'mobilefuse',
-    'moloco',
-    'my_target',
-    'ogury',
-    'pangle',
-    'pubmatic',
-    'sentry_analytics',
-    'smaato',
-    'startio',
-    'taurusx',
-    'unity_ads',
-    'verve',
-    'vungle',
-    'yandex'
-] as Set<String>
+def profileAdapters = [
+    // 'standard' (default): All direct Appodeal ad networks + BidMachine & Bidon in-app bidding
+    // (excludes redundant third-party waterfall mediators applovin_max/level_play and sentry_analytics by default to reduce APK size)
+    'standard': [
+        'admob',
+        'amazon',
+        'applovin',
+        'bidmachine',
+        'bidon',
+        'bigo_ads',
+        'chartboost',
+        'dt_exchange',
+        'iab',
+        'inmobi',
+        'ironsource',
+        'meta',
+        'mintegral',
+        'mobilefuse',
+        'moloco',
+        'my_target',
+        'ogury',
+        'pangle',
+        'pubmatic',
+        'smaato',
+        'startio',
+        'taurusx',
+        'unity_ads',
+        'verve',
+        'vungle',
+        'yandex'
+    ] as Set<String>,
+
+    // 'full': Complete Step 1 bundle including secondary MAX & LevelPlay mediation bridges and Sentry
+    'full': [
+        'admob',
+        'amazon',
+        'applovin',
+        'applovin_max',
+        'bidmachine',
+        'bidon',
+        'bigo_ads',
+        'chartboost',
+        'dt_exchange',
+        'iab',
+        'inmobi',
+        'ironsource',
+        'level_play',
+        'meta',
+        'mintegral',
+        'mobilefuse',
+        'moloco',
+        'my_target',
+        'ogury',
+        'pangle',
+        'pubmatic',
+        'sentry_analytics',
+        'smaato',
+        'startio',
+        'taurusx',
+        'unity_ads',
+        'verve',
+        'vungle',
+        'yandex'
+    ] as Set<String>,
+
+    // 'minimal': Lightweight core high-fill networks for minimum APK/AAB footprint
+    'minimal': [
+        'applovin',
+        'unity_ads',
+        'vungle',
+        'mintegral',
+        'dt_exchange',
+        'inmobi',
+        'bidmachine',
+        'iab'
+    ] as Set<String>
+]
 
 // BidMachine header-bidding network bridges (included automatically when both 'bidmachine' and the target network are enabled)
 def bidmachineBridges = [
@@ -262,6 +308,23 @@ def resolveAdapterList = { String propName ->
     return raw.toString().split(',').collect { it.trim() }.findAll { !it.isEmpty() } as Set<String>
 }
 
+def resolveStringProperty = { String propName, String defaultValue ->
+    if (rootProject.ext.has(propName)) {
+        def val = rootProject.ext.get(propName)
+        return val != null ? val.toString().trim() : defaultValue
+    }
+    if (project.hasProperty(propName)) {
+        def val = project.property(propName)
+        return val != null ? val.toString().trim() : defaultValue
+    }
+    return defaultValue
+}
+
+def selectedProfileName = resolveStringProperty('appodealProfile', 'standard').toLowerCase()
+def defaultIncludedAdapters = profileAdapters.containsKey(selectedProfileName)
+    ? profileAdapters[selectedProfileName]
+    : profileAdapters['standard']
+
 def includedOverride = resolveAdapterList('appodealIncludedAdapters')
 def excludedOverride = resolveAdapterList('appodealExcludedAdapters')
 def extraOverride = resolveAdapterList('appodealExtraAdapters')
@@ -274,6 +337,20 @@ if (extraOverride != null) {
 }
 if (excludedOverride != null) {
     activeAdapters.removeAll(excludedOverride)
+}
+
+// Auto-guard against AdMob startup crash when host app AndroidManifest.xml lacks APPLICATION_ID
+boolean admobExplicitlyRequested = (includedOverride != null && includedOverride.contains('admob')) ||
+    (extraOverride != null && extraOverride.contains('admob'))
+if (activeAdapters.contains('admob') && !admobExplicitlyRequested) {
+    File hostManifest = rootProject.file('app/src/main/AndroidManifest.xml')
+    if (hostManifest.exists()) {
+        String manifestText = hostManifest.getText('UTF-8')
+        if (!manifestText.contains('com.google.android.gms.ads.APPLICATION_ID')) {
+            activeAdapters.remove('admob')
+            logger.lifecycle("[capacitor-appodeal] 'com.google.android.gms.ads.APPLICATION_ID' not found in app/src/main/AndroidManifest.xml — auto-excluding 'admob' adapter to prevent startup crash.")
+        }
+    }
 }
 
 dependencies {

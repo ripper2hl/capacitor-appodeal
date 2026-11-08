@@ -49,7 +49,16 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "appodeal",
+    "ads",
+    "mediation",
+    "monetization",
+    "banner",
+    "interstitial",
+    "rewarded-video",
+    "android",
+    "ionic"
   ],
   "capacitor": {
     "android": {
@@ -61,7 +70,7 @@
   },
   "prettier": "@ionic/prettier-config",
   "peerDependencies": {
-    "@capacitor/core": "^6.0.0"
+    "@capacitor/core": ">=6.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^6.0.0",

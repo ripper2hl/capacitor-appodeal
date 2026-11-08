@@ -19,7 +19,7 @@
 
 | Plugin Version | Capacitor Version | Appodeal Android SDK | Min Android API |
 | :--- | :--- | :--- | :---: |
-| `0.1.x` | `^6.0.0` (compatible with 6–8) | `4.4.0` (Modular) | `24` (Android 7.0) |
+| `0.1.x` | `>=6.0.0` (Capacitor 6, 7 & 8) | `4.4.0` (Modular) | `24` (Android 7.0) |
 | `0.0.x` | `^6.0.0` | `3.12.0.1` (Legacy bundle) | `22` |
 
 ---
@@ -96,14 +96,14 @@ Some ad network SDKs automatically merge `ACCESS_COARSE_LOCATION` and `ACCESS_FI
 
 > **Note:** If your app **does** require geolocation (for example via `@capacitor/geolocation`), do **not** add `tools:node="remove"` and instead declare your location usage in the Google Play Data Safety form.
 
-### 5. Android — AdMob Setup or Removal (`APPLICATION_ID` vs `appodealExcludedAdapters`)
+### 5. Android — AdMob Setup or Removal (`APPLICATION_ID` Auto-Detection vs `appodealExcludedAdapters`)
 
-By default, this plugin includes the full **Step 1 Appodeal 4.4.0 Mediation Bundle** (including `admob`), while keeping **Step 2 UA/Analytics Services** (`adjust`, `appsflyer`, `facebook_analytics`, `firebase`) excluded by default.
-
-Depending on whether you use AdMob in your app, choose **one** of the two options below:
+By default (`appodealProfile = 'standard'`), this plugin includes all direct Appodeal ad networks + BidMachine & Bidon in-app bidding, and **automatically checks your `android/app/src/main/AndroidManifest.xml` at build time**:
+- **If `com.google.android.gms.ads.APPLICATION_ID` is present** in `AndroidManifest.xml`, `admob` is compiled and enabled automatically.
+- **If `com.google.android.gms.ads.APPLICATION_ID` is NOT present** in `AndroidManifest.xml`, Gradle **automatically excludes `admob`** so your app never crashes on startup even with zero configuration.
 
 #### Option A — You DO use AdMob (How to configure it)
-Keep the default adapters and add your AdMob `APPLICATION_ID` inside `<application>` in `android/app/src/main/AndroidManifest.xml`:
+Add your AdMob `APPLICATION_ID` inside `<application>` in `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -122,12 +122,12 @@ Keep the default adapters and add your AdMob `APPLICATION_ID` inside `<applicati
 *(Don't forget to sync your AdMob account with the [Appodeal AdMob Sync tool](https://amsa-updates.appodeal.com/)).*
 
 #### Option B — You DO NOT use AdMob (How to remove it)
-If you don't use AdMob (or don't want to add `com.google.android.gms.ads.APPLICATION_ID`), exclude `admob` in `android/variables.gradle` (or use `appodealIncludedAdapters` to whitelist only your active networks):
+Simply omit the `<meta-data>` tag above (the plugin will auto-exclude `admob` during Gradle sync), or exclude it explicitly in `android/variables.gradle`:
 
 ```groovy
 // android/variables.gradle
 ext {
-    // Excludes AdMob at compile time — no APPLICATION_ID meta-data needed in AndroidManifest.xml
+    // Explicitly excludes AdMob at compile time
     appodealExcludedAdapters = ['admob']
 }
 ```
@@ -146,7 +146,20 @@ Starting in **v0.1.0 (Appodeal SDK 4.4.0)**, ad network adapters are completely 
 
 ### 1. Compile-Time Adapter Selection (`android/variables.gradle`)
 
-#### Mode A — Whitelist (`appodealIncludedAdapters`) *(Recommended for Production)*
+#### Built-in Profiles (`appodealProfile`)
+You can choose a built-in profile with a single property in `android/variables.gradle`:
+- `'standard'` *(Default)*: All 26 direct Appodeal ad networks + BidMachine & Bidon in-app bidding (excludes duplicate third-party MAX/LevelPlay waterfall bridges by default to save ~37 AARs of APK weight, and auto-excludes `admob` if `APPLICATION_ID` is absent from `AndroidManifest.xml`).
+- `'minimal'`: Lightweight high-fill bundle (`applovin`, `unity_ads`, `vungle`, `mintegral`, `dt_exchange`, `inmobi`, `bidmachine`, `iab`).
+- `'full'`: Complete Step 1 bundle including `applovin_max` (+ 21 MAX bridges), `level_play` (+ 16 LevelPlay bridges), and `sentry_analytics`.
+
+```groovy
+// android/variables.gradle
+ext {
+    appodealProfile = 'minimal' // 'standard' (default) | 'minimal' | 'full'
+}
+```
+
+#### Mode A — Custom Whitelist (`appodealIncludedAdapters`) *(Recommended for Production)*
 Compile **only** the exact ad networks that provide demand for your app. This minimizes APK/AAB size and avoids bundling unused SDKs:
 
 ```groovy
@@ -197,42 +210,42 @@ ext {
 
 ### 2. Full Adapter Catalog (Appodeal SDK `4.4.0`)
 
-| Adapter Key (`AppodealNetwork`) | Maven Artifact (`com.appodeal.ads.sdk.adapters:*`) | Version | Default State | Notes |
+| Adapter Key (`AppodealNetwork`) | Maven Artifact (`com.appodeal.ads.sdk.adapters:*`) | Version | Default (`standard`) | Notes |
 | :--- | :--- | :---: | :---: | :--- |
-| `admob` | `admob` | `25.2.0.0` | ✅ Included (Step 1) | Requires `APPLICATION_ID` in `AndroidManifest.xml` (or remove via `appodealExcludedAdapters = ['admob']`) |
-| `amazon` | `amazon` | `12.0.0.0` | ✅ Included (Step 1) | Amazon APS |
-| `applovin` | `applovin` | `13.6.3.0` | ✅ Included (Step 1) | AppLovin SDK |
-| `applovin_max` | `applovin_max` | `13.6.3.1` | ✅ Included (Step 1) | AppLovin MAX mediation (+ auto `com.applovin.mediation:*` bridges) |
-| `bidmachine` | `bidmachine` | `3.7.1.0` | ✅ Included (Step 1) | BidMachine (+ auto `io.bidmachine:ads.networks.*` bridges) |
-| `bidon` | `bidon` | `0.14.0.0` | ✅ Included (Step 1) | Bidon mediation (+ auto `org.bidon:*-adapter` bridges) |
-| `bigo_ads` | `bigo_ads` | `5.9.0.0` | ✅ Included (Step 1) | Bigo Ads |
-| `chartboost` | `chartboost` | `9.10.2.0` | ✅ Included (Step 1) | Chartboost |
-| `dt_exchange` | `dt_exchange` | `8.4.6.0` | ✅ Included (Step 1) | DT Exchange (Fyber) |
-| `iab` | `iab` | `1.8.1.1` | ✅ Included (Step 1) | IAB MRAID / VAST / NAST |
-| `inmobi` | `inmobi` | `11.3.0.0` | ✅ Included (Step 1) | InMobi |
-| `ironsource` | `ironsource` | `9.4.4.0` | ✅ Included (Step 1) | IronSource |
-| `level_play` | `level_play` | `9.4.4.0` | ✅ Included (Step 1) | LevelPlay mediation (+ auto `com.unity3d.ads-mediation:*` bridges) |
-| `meta` | `meta` | `6.21.0.0` | ✅ Included (Step 1) | Meta Audience Network |
-| `mintegral` | `mintegral` | `17.1.61.0` | ✅ Included (Step 1) | Mintegral |
-| `mobilefuse` | `mobilefuse` | `1.11.0.0` | ✅ Included (Step 1) | MobileFuse |
-| `moloco` | `moloco` | `4.3.1.0` | ✅ Included (Step 1) | Moloco |
-| `my_target` | `my_target` | `5.47.1.0` | ✅ Included (Step 1) | myTarget (VK Ads) |
-| `ogury` | `ogury` | `6.2.0.0` | ✅ Included (Step 1) | Ogury |
-| `pangle` | `pangle` | `7.7.0.2.0` | ✅ Included (Step 1) | Pangle (TikTok) |
-| `pubmatic` | `pubmatic` | `4.10.0.0` | ✅ Included (Step 1) | PubMatic |
-| `sentry_analytics` | `sentry_analytics` | `8.44.1.0` | ✅ Included (Step 1) | Sentry crash reporting |
-| `smaato` | `smaato` | `22.7.2.0` | ✅ Included (Step 1) | Smaato |
-| `startio` | `startio` | `5.2.4.0` | ✅ Included (Step 1) | Start.io |
-| `taurusx` | `taurusx` | `1.12.2.0` | ✅ Included (Step 1) | TaurusX |
-| `unity_ads` | `unity_ads` | `4.17.0.0` | ✅ Included (Step 1) | Unity Ads |
-| `verve` | `verve` | `3.7.1.0` | ✅ Included (Step 1) | Verve |
-| `vungle` | `vungle` | `7.7.4.0` | ✅ Included (Step 1) | Liftoff Monetize (Vungle) |
-| `yandex` | `yandex` | `7.17.0.0` | ✅ Included (Step 1) | Yandex Ads |
-| `admob_next_gen` | `admob_next_gen` | `1.4.0.0` | ❌ Excluded | Next-Gen Google Mobile Ads (opt-in) |
-| `adjust` | `adjust` | `5.7.0.0` | ❌ Excluded (Step 2) | Attribution tracking |
-| `appsflyer` | `appsflyer` | `6.18.0.1` | ❌ Excluded (Step 2) | Attribution tracking |
-| `facebook_analytics` | `facebook_analytics` | `18.3.0.0` | ❌ Excluded (Step 2) | Meta analytics |
-| `firebase` | `firebase` | `23.2.0.0` | ❌ Excluded (Step 2) | Firebase / Remote Config |
+| `admob` | `admob` | `25.2.0.0` | ✅ Auto | Auto-included if `APPLICATION_ID` is in `AndroidManifest.xml`; auto-excluded otherwise |
+| `amazon` | `amazon` | `12.0.0.0` | ✅ Included | Amazon APS |
+| `applovin` | `applovin` | `13.6.3.0` | ✅ Included | AppLovin SDK |
+| `applovin_max` | `applovin_max` | `13.6.3.1` | ⚙️ `full` / Opt-in | AppLovin MAX mediation (+ auto `com.applovin.mediation:*` bridges) |
+| `bidmachine` | `bidmachine` | `3.7.1.0` | ✅ Included | BidMachine (+ auto `io.bidmachine:ads.networks.*` bridges) |
+| `bidon` | `bidon` | `0.14.0.0` | ✅ Included | Bidon mediation (+ auto `org.bidon:*-adapter` bridges) |
+| `bigo_ads` | `bigo_ads` | `5.9.0.0` | ✅ Included | Bigo Ads |
+| `chartboost` | `chartboost` | `9.10.2.0` | ✅ Included | Chartboost |
+| `dt_exchange` | `dt_exchange` | `8.4.6.0` | ✅ Included | DT Exchange (Fyber) |
+| `iab` | `iab` | `1.8.1.1` | ✅ Included | IAB MRAID / VAST / NAST |
+| `inmobi` | `inmobi` | `11.3.0.0` | ✅ Included | InMobi |
+| `ironsource` | `ironsource` | `9.4.4.0` | ✅ Included | IronSource |
+| `level_play` | `level_play` | `9.4.4.0` | ⚙️ `full` / Opt-in | LevelPlay mediation (+ auto `com.unity3d.ads-mediation:*` bridges) |
+| `meta` | `meta` | `6.21.0.0` | ✅ Included | Meta Audience Network |
+| `mintegral` | `mintegral` | `17.1.61.0` | ✅ Included | Mintegral |
+| `mobilefuse` | `mobilefuse` | `1.11.0.0` | ✅ Included | MobileFuse |
+| `moloco` | `moloco` | `4.3.1.0` | ✅ Included | Moloco |
+| `my_target` | `my_target` | `5.47.1.0` | ✅ Included | myTarget (VK Ads) |
+| `ogury` | `ogury` | `6.2.0.0` | ✅ Included | Ogury |
+| `pangle` | `pangle` | `7.7.0.2.0` | ✅ Included | Pangle (TikTok) |
+| `pubmatic` | `pubmatic` | `4.10.0.0` | ✅ Included | PubMatic |
+| `sentry_analytics` | `sentry_analytics` | `8.44.1.0` | ⚙️ `full` / Opt-in | Sentry crash reporting |
+| `smaato` | `smaato` | `22.7.2.0` | ✅ Included | Smaato |
+| `startio` | `startio` | `5.2.4.0` | ✅ Included | Start.io |
+| `taurusx` | `taurusx` | `1.12.2.0` | ✅ Included | TaurusX |
+| `unity_ads` | `unity_ads` | `4.17.0.0` | ✅ Included | Unity Ads |
+| `verve` | `verve` | `3.7.1.0` | ✅ Included | Verve |
+| `vungle` | `vungle` | `7.7.4.0` | ✅ Included | Liftoff Monetize (Vungle) |
+| `yandex` | `yandex` | `7.17.0.0` | ✅ Included | Yandex Ads |
+| `admob_next_gen` | `admob_next_gen` | `1.4.0.0` | ❌ Opt-in | Next-Gen Google Mobile Ads (`appodealExtraAdapters`) |
+| `adjust` | `adjust` | `5.7.0.0` | ❌ Opt-in (Step 2) | Attribution tracking (`appodealExtraAdapters`) |
+| `appsflyer` | `appsflyer` | `6.18.0.1` | ❌ Opt-in (Step 2) | Attribution tracking (`appodealExtraAdapters`) |
+| `facebook_analytics` | `facebook_analytics` | `18.3.0.0` | ❌ Opt-in (Step 2) | Meta analytics (`appodealExtraAdapters`) |
+| `firebase` | `firebase` | `23.2.0.0` | ❌ Opt-in (Step 2) | Firebase / Remote Config (`appodealExtraAdapters`) |
 
 ---
 

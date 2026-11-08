@@ -311,6 +311,15 @@ public class AppodealPluginTest {
     }
 
     @Test
+    public void methods_rejectWhenActivityIsNull() {
+        doReturn(null).when(plugin).getActivity();
+
+        plugin.hideBanner(call);
+
+        verify(call).reject("Activity is not available");
+    }
+
+    @Test
     public void callbacks_emitExpectedEvents() {
         plugin.onBannerLoaded(50, true);
         plugin.onBannerFailedToLoad();
