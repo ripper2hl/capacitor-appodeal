@@ -93,11 +93,15 @@ repositories {
 }
 
 // ---------------------------------------------------------------------------
-// Appodeal 4.x Modular Adapter Catalog
+// Appodeal 4.x Modular Adapter Catalog (Official 4.4.0 Get Started Guide)
 // ---------------------------------------------------------------------------
 def appodealAdapterCatalog = [
-    // Standard mediation networks (included by default)
+    // Step 1 — Official Ad Network & Mediation Adapters (included by default)
+    'admob'             : 'com.appodeal.ads.sdk.adapters:admob:25.2.0.0',
+    'admob_next_gen'    : 'com.appodeal.ads.sdk.adapters:admob_next_gen:1.4.0.0',
+    'amazon'            : 'com.appodeal.ads.sdk.adapters:amazon:12.0.0.0',
     'applovin'          : 'com.appodeal.ads.sdk.adapters:applovin:13.6.3.0',
+    'applovin_max'      : 'com.appodeal.ads.sdk.adapters:applovin_max:13.6.3.1',
     'bidmachine'        : 'com.appodeal.ads.sdk.adapters:bidmachine:3.7.1.0',
     'bidon'             : 'com.appodeal.ads.sdk.adapters:bidon:0.14.0.0',
     'bigo_ads'          : 'com.appodeal.ads.sdk.adapters:bigo_ads:5.9.0.0',
@@ -106,6 +110,7 @@ def appodealAdapterCatalog = [
     'iab'               : 'com.appodeal.ads.sdk.adapters:iab:1.8.1.1',
     'inmobi'            : 'com.appodeal.ads.sdk.adapters:inmobi:11.3.0.0',
     'ironsource'        : 'com.appodeal.ads.sdk.adapters:ironsource:9.4.4.0',
+    'level_play'        : 'com.appodeal.ads.sdk.adapters:level_play:9.4.4.0',
     'meta'              : 'com.appodeal.ads.sdk.adapters:meta:6.21.0.0',
     'mintegral'         : 'com.appodeal.ads.sdk.adapters:mintegral:17.1.61.0',
     'mobilefuse'        : 'com.appodeal.ads.sdk.adapters:mobilefuse:1.11.0.0',
@@ -114,6 +119,7 @@ def appodealAdapterCatalog = [
     'ogury'             : 'com.appodeal.ads.sdk.adapters:ogury:6.2.0.0',
     'pangle'            : 'com.appodeal.ads.sdk.adapters:pangle:7.7.0.2.0',
     'pubmatic'          : 'com.appodeal.ads.sdk.adapters:pubmatic:4.10.0.0',
+    'sentry_analytics'  : 'com.appodeal.ads.sdk.adapters:sentry_analytics:8.44.1.0',
     'smaato'            : 'com.appodeal.ads.sdk.adapters:smaato:22.7.2.0',
     'startio'           : 'com.appodeal.ads.sdk.adapters:startio:5.2.4.0',
     'taurusx'           : 'com.appodeal.ads.sdk.adapters:taurusx:1.12.2.0',
@@ -122,21 +128,18 @@ def appodealAdapterCatalog = [
     'vungle'            : 'com.appodeal.ads.sdk.adapters:vungle:7.7.4.0',
     'yandex'            : 'com.appodeal.ads.sdk.adapters:yandex:7.17.0.0',
 
-    // Opt-in adapters (excluded by default: require AndroidManifest keys, AdMob, or are analytics/attribution trackers)
-    'admob'             : 'com.appodeal.ads.sdk.adapters:admob:25.2.0.0',
-    'admob_next_gen'    : 'com.appodeal.ads.sdk.adapters:admob_next_gen:1.4.0.0',
-    'amazon'            : 'com.appodeal.ads.sdk.adapters:amazon:12.0.0.0',
-    'applovin_max'      : 'com.appodeal.ads.sdk.adapters:applovin_max:13.6.3.1',
-    'level_play'        : 'com.appodeal.ads.sdk.adapters:level_play:9.4.4.0',
+    // Step 2 — Optional UA / Attribution / Analytics Services (excluded by default, opt-in via appodealExtraAdapters)
     'adjust'            : 'com.appodeal.ads.sdk.adapters:adjust:5.7.0.0',
     'appsflyer'         : 'com.appodeal.ads.sdk.adapters:appsflyer:6.18.0.1',
     'facebook_analytics': 'com.appodeal.ads.sdk.adapters:facebook_analytics:18.3.0.0',
-    'firebase'          : 'com.appodeal.ads.sdk.adapters:firebase:23.2.0.0',
-    'sentry_analytics'  : 'com.appodeal.ads.sdk.adapters:sentry_analytics:8.44.1.0'
+    'firebase'          : 'com.appodeal.ads.sdk.adapters:firebase:23.2.0.0'
 ]
 
 def defaultIncludedAdapters = [
+    'admob',
+    'amazon',
     'applovin',
+    'applovin_max',
     'bidmachine',
     'bidon',
     'bigo_ads',
@@ -145,6 +148,7 @@ def defaultIncludedAdapters = [
     'iab',
     'inmobi',
     'ironsource',
+    'level_play',
     'meta',
     'mintegral',
     'mobilefuse',
@@ -153,6 +157,7 @@ def defaultIncludedAdapters = [
     'ogury',
     'pangle',
     'pubmatic',
+    'sentry_analytics',
     'smaato',
     'startio',
     'taurusx',
@@ -211,7 +216,6 @@ def applovinMaxBridges = [
     'mintegral'  : ['com.applovin.mediation:mintegral-adapter:17.1.61.0'],
     'mobilefuse' : ['com.applovin.mediation:mobilefuse-adapter:1.11.0.0'],
     'moloco'     : ['com.applovin.mediation:moloco-adapter:4.3.1.0'],
-    'my_target'  : ['com.applovin.mediation:mytarget-adapter:5.47.1.0'],
     'ogury'      : ['com.applovin.mediation:ogury-presage-adapter:6.2.0.0'],
     'pangle'     : ['com.applovin.mediation:bytedance-adapter:8.1.0.3.0'],
     'pubmatic'   : ['com.applovin.mediation:pubmatic-adapter:4.10.0.0'],
