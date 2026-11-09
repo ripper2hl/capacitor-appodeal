@@ -140,6 +140,35 @@ Before publishing to Google Play:
 
 ---
 
+## Quick Start (Show Your First Ad in 30 Seconds)
+
+```typescript
+import { Appodeal, AppodealAdType } from 'capacitor-appodeal';
+
+// 1. Initialize once when your app starts
+await Appodeal.initialize({
+  appKey: 'YOUR_APPODEAL_APP_KEY',
+  adTypes:
+    AppodealAdType.BANNER |
+    AppodealAdType.INTERSTITIAL |
+    AppodealAdType.REWARDED_VIDEO,
+  testing: false, // set true ONLY during local development
+});
+
+// 2. Show a bottom banner immediately
+await Appodeal.showBanner({ position: AppodealAdType.BANNER_BOTTOM });
+
+// 3. Show an interstitial when ready
+const { canShow } = await Appodeal.canShow({
+  adType: AppodealAdType.INTERSTITIAL,
+});
+if (canShow) {
+  await Appodeal.showInterstitial();
+}
+```
+
+---
+
 ## Configuration — Ad Network Adapters (Appodeal 4.x Modular Architecture)
 
 Starting in **v0.1.0 (Appodeal SDK 4.4.0)**, ad network adapters are completely modular. You can control which networks are compiled into your Android APK/AAB via your app's `android/variables.gradle` (or `android/gradle.properties`) **without modifying the plugin**, and you can also disable networks at runtime from TypeScript.
