@@ -325,20 +325,35 @@ try {
 }
 ```
 
-### Rewarded Video
+### Rewarded Video & Checking Readiness (`canShow` / `isLoaded`)
 
-Include `AppodealAdType.REWARDED_VIDEO` when calling `initialize()`, listen for reward completion via `onRewardedVideoFinished`, and show the video when ready:
+Include `AppodealAdType.REWARDED_VIDEO` when calling `initialize()`, check readiness with `canShow()`, and listen for reward completion via `onRewardedVideoFinished`:
 
 ```typescript
 Appodeal.addListener('onRewardedVideoFinished', ({ amount, currency }) => {
   console.log(`User earned ${amount} ${currency}`);
 });
 
-try {
-  await Appodeal.showRewardedVideo();
-} catch {
-  console.warn('Rewarded video not ready yet');
+const { canShow } = await Appodeal.canShow({
+  adType: AppodealAdType.REWARDED_VIDEO,
+  placement: 'double_coins', // optional placement
+});
+
+if (canShow) {
+  await Appodeal.showRewardedVideo({ placement: 'double_coins' });
 }
+```
+
+### Ad Revenue Callback (`onAdRevenueReceive`)
+
+Track real-time impression revenue per network and placement:
+
+```typescript
+Appodeal.addListener('onAdRevenueReceive', (info) => {
+  console.log(
+    `[${info.adTypeString}] ${info.networkName} (${info.demandSource}): $${info.revenue} ${info.currency} (${info.precision})`,
+  );
+});
 ```
 
 ### Listeners
@@ -393,10 +408,12 @@ await Appodeal.removeAllListeners();
 | `initialize(options)` | `Promise<void>` | Initialize the SDK (`appKey`, `adTypes`, optional `testing`, optional `disabledNetworks`) |
 | `disableNetwork(options)` | `Promise<void>` | Disable an ad network before initialization (`network`, optional `adTypes`) |
 | `getNetworks(options?)` | `Promise<{ networks: string[] }>` | Get registered ad networks (optional `adTypes` filter) |
-| `showBanner(options?)` | `Promise<void>` | Show banner ad (`position`: `BANNER_BOTTOM` or `BANNER_TOP`) |
+| `isLoaded(options)` | `Promise<{ isLoaded: boolean }>` | Check if `adType` is currently loaded |
+| `canShow(options)` | `Promise<{ canShow: boolean }>` | Check if `adType` can be shown (optional `placement`) |
+| `showBanner(options?)` | `Promise<void>` | Show banner ad (`position`: `BANNER_BOTTOM` or `BANNER_TOP`, optional `placement`) |
 | `hideBanner()` | `Promise<void>` | Hide banner ad |
-| `showInterstitial()` | `Promise<void>` | Show interstitial (rejects if not loaded) |
-| `showRewardedVideo()` | `Promise<void>` | Show rewarded video (rejects if not loaded) |
+| `showInterstitial(options?)` | `Promise<void>` | Show interstitial (optional `placement`; rejects if not loaded) |
+| `showRewardedVideo(options?)` | `Promise<void>` | Show rewarded video (optional `placement`; rejects if not loaded) |
 | `addListener(event, fn)` | `Promise<PluginListenerHandle>` | Register an event listener |
 | `removeAllListeners()` | `Promise<void>` | Remove all event listeners |
 
@@ -448,6 +465,12 @@ await Appodeal.removeAllListeners();
 | `onRewardedVideoClicked` | `{}` | User tapped the ad |
 | `onRewardedVideoFinished` | `{ amount: number, currency: string }` | User completed watching and earned reward |
 | `onRewardedVideoClosed` | `{ isFinished: boolean }` | User dismissed the ad (`isFinished` indicates completion) |
+
+#### Ad Revenue
+
+| Event | Payload | Description |
+| :--- | :--- | :--- |
+| `onAdRevenueReceive` | `AdRevenueEvent` (`{ adType, adTypeString, networkName, demandSource, adUnitName, placement, revenue, currency, precision }`) | Impression-level ad revenue data |
 
 ---
 

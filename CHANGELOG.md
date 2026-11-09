@@ -17,12 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `disableNetwork({ network, adTypes? })` method and `disabledNetworks?: string[]` option in `initialize()` for runtime network control before initialization.
 - `getNetworks({ adTypes? })` method to inspect active networks at runtime.
 - **Rewarded Video support:** `showRewardedVideo()` method (rejects if not loaded) and all 7 native callbacks (`onRewardedVideoLoaded`, `onRewardedVideoFailedToLoad`, `onRewardedVideoShown`, `onRewardedVideoShowFailed`, `onRewardedVideoClicked`, `onRewardedVideoFinished` with `{ amount, currency }`, and `onRewardedVideoClosed` with `{ isFinished }`), plus typed interfaces (`RewardedVideoLoadedEvent`, `RewardedVideoFinishedEvent`, `RewardedVideoClosedEvent`).
+- **Readiness, Placements & Ad Revenue (Phase 3):**
+  - `isLoaded({ adType })` and `canShow({ adType, placement? })` methods.
+  - Optional `placement` parameter in `showBanner()`, `showInterstitial()`, and `showRewardedVideo()`.
+  - `onAdRevenueReceive` listener (`AdRevenueEvent`) via `Appodeal.setAdRevenueCallbacks` for impression-level revenue tracking.
 - Unit test suite for both Android (`JUnit` + `Mockito` + `JaCoCo`) and Web/TypeScript (`node:test` + LCOV) integrated with SonarQube (`sonar-project.properties`).
 
 ### Changed
 - **BREAKING (Android minSdk):** Migrated native Android dependency from legacy monolithic `com.appodeal.ads:sdk:3.12.0.1` to modular `com.appodeal.ads.sdk:core:4.4.0`. Minimum supported Android API level is now **24 (Android 7.0)**.
 - Default `compileSdkVersion` and `targetSdkVersion` updated to `36` with Gradle `8.14.3` and Android Gradle Plugin `8.13.0` (16 KB page size compatible).
-- Relaxed `peerDependencies` (`"@capacitor/core": ">=6.0.0"`) for seamless installation on Capacitor 6, 7, and 8 projects without `ERESOLVE` conflicts.
+- Relaxed `peerDependencies` (`"@capacitor/core": ">=6.0.0"`) for seamless installation on Capacitor 6, 7, and 8 projects without `ERESOLVE` conflicts, and upgraded project `devDependencies` to Capacitor 8 (`@capacitor/core` & `@capacitor/android` `^8.0.0`), TypeScript `^5.8.0`, Rollup `^4.0.0` (`@rollup/plugin-terser`), Rimraf `^6.0.0`, Prettier `^3.5.0`, and AndroidX `appcompat 1.7.1`.
 - Added null-safe `getActivity()` guard in `AppodealPlugin` (`runOnActivityUiThread`) to reject calls cleanly instead of throwing `NullPointerException` when the Android Activity is unavailable.
 - Hardened `testing` flag in `initialize()` to strictly default to `false` with explicit log level management (`LogLevel.none` in production, warning + `LogLevel.verbose` when `testing: true`).
 

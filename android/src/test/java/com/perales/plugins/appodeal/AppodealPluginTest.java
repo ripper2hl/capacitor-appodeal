@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.appodeal.ads.Appodeal;
 import com.appodeal.ads.initializing.ApdInitializationCallback;
 import com.appodeal.ads.initializing.ApdInitializationError;
+import com.appodeal.ads.revenue.RevenueInfo;
 import com.appodeal.ads.utils.Log.LogLevel;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -112,6 +113,7 @@ public class AppodealPluginTest {
             appodealMock.verify(() -> Appodeal.setBannerCallbacks(plugin));
             appodealMock.verify(() -> Appodeal.setInterstitialCallbacks(plugin));
             appodealMock.verify(() -> Appodeal.setRewardedVideoCallbacks(plugin));
+            appodealMock.verify(() -> Appodeal.setAdRevenueCallbacks(plugin));
             verify(call).resolve(any(JSObject.class));
         }
     }
@@ -229,8 +231,59 @@ public class AppodealPluginTest {
     }
 
     @Test
+    public void isLoaded_rejectsWhenAdTypeMissing() {
+        when(call.getInt("adType")).thenReturn(null);
+
+        plugin.isLoaded(call);
+
+        verify(call).reject("Must provide adType");
+    }
+
+    @Test
+    public void isLoaded_returnsLoadedState() throws Exception {
+        when(call.getInt("adType")).thenReturn(Appodeal.REWARDED_VIDEO);
+
+        try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
+            appodealMock.when(() -> Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)).thenReturn(true);
+
+            plugin.isLoaded(call);
+
+            ArgumentCaptor<JSObject> captor = ArgumentCaptor.forClass(JSObject.class);
+            verify(call).resolve(captor.capture());
+            assertEquals(true, captor.getValue().getBoolean("isLoaded"));
+        }
+    }
+
+    @Test
+    public void canShow_rejectsWhenAdTypeMissing() {
+        when(call.getInt("adType")).thenReturn(null);
+
+        plugin.canShow(call);
+
+        verify(call).reject("Must provide adType");
+    }
+
+    @Test
+    public void canShow_checksWithoutPlacementAndWithPlacement() throws Exception {
+        when(call.getInt("adType")).thenReturn(Appodeal.REWARDED_VIDEO);
+        when(call.getString("placement")).thenReturn("   ").thenReturn(" store ");
+
+        try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
+            appodealMock.when(() -> Appodeal.canShow(Appodeal.REWARDED_VIDEO)).thenReturn(true);
+            appodealMock.when(() -> Appodeal.canShow(Appodeal.REWARDED_VIDEO, "store")).thenReturn(false);
+
+            plugin.canShow(call);
+            plugin.canShow(call);
+
+            appodealMock.verify(() -> Appodeal.canShow(Appodeal.REWARDED_VIDEO));
+            appodealMock.verify(() -> Appodeal.canShow(Appodeal.REWARDED_VIDEO, "store"));
+        }
+    }
+
+    @Test
     public void showBanner_usesDefaultBottomWhenPositionNull() {
         when(call.getInt("position", Appodeal.BANNER_BOTTOM)).thenReturn(null);
+        when(call.getString("placement")).thenReturn(null);
 
         try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
             plugin.showBanner(call);
@@ -241,13 +294,14 @@ public class AppodealPluginTest {
     }
 
     @Test
-    public void showBanner_usesProvidedPosition() {
+    public void showBanner_usesProvidedPositionAndPlacement() {
         when(call.getInt("position", Appodeal.BANNER_BOTTOM)).thenReturn(Appodeal.BANNER_TOP);
+        when(call.getString("placement")).thenReturn(" top_banner ");
 
         try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
             plugin.showBanner(call);
 
-            appodealMock.verify(() -> Appodeal.show(activity, Appodeal.BANNER_TOP));
+            appodealMock.verify(() -> Appodeal.show(activity, Appodeal.BANNER_TOP, "top_banner"));
             verify(call).resolve();
         }
     }
@@ -345,6 +399,19 @@ public class AppodealPluginTest {
         plugin.onRewardedVideoFinished(5.0, null);
         plugin.onRewardedVideoClosed(true);
         plugin.onRewardedVideoExpired();
+
+        plugin.onAdRevenueReceive(null);
+        RevenueInfo revenueInfo = mock(RevenueInfo.class);
+        when(revenueInfo.getAdType()).thenReturn(Appodeal.REWARDED_VIDEO);
+        when(revenueInfo.getAdTypeString()).thenReturn("rewarded_video");
+        when(revenueInfo.getNetworkName()).thenReturn("applovin");
+        when(revenueInfo.getDemandSource()).thenReturn(null);
+        when(revenueInfo.getAdUnitName()).thenReturn("unit_1");
+        when(revenueInfo.getPlacement()).thenReturn("default");
+        when(revenueInfo.getRevenue()).thenReturn(0.025);
+        when(revenueInfo.getCurrency()).thenReturn("USD");
+        when(revenueInfo.getRevenuePrecision()).thenReturn("exact");
+        plugin.onAdRevenueReceive(revenueInfo);
 
         // Verify no exceptions thrown during callback execution
         assertNotNull(plugin);

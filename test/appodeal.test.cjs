@@ -47,11 +47,20 @@ test('AppodealWeb methods execute and enforce testing=false by default', async (
     const { networks } = await web.getNetworks({ adTypes: AppodealAdType.BANNER });
     assert.deepEqual(networks, []);
 
+    const { isLoaded } = await web.isLoaded({ adType: AppodealAdType.REWARDED_VIDEO });
+    assert.equal(isLoaded, false);
+
+    const { canShow } = await web.canShow({
+        adType: AppodealAdType.REWARDED_VIDEO,
+        placement: 'default',
+    });
+    assert.equal(canShow, false);
+
     await web.showBanner();
-    await web.showBanner({ position: AppodealAdType.BANNER_TOP });
+    await web.showBanner({ position: AppodealAdType.BANNER_TOP, placement: 'header' });
     await web.hideBanner();
-    await web.showInterstitial();
-    await web.showRewardedVideo();
+    await web.showInterstitial({ placement: 'level_complete' });
+    await web.showRewardedVideo({ placement: 'double_reward' });
     await web.removeAllListeners();
 
     await Appodeal.hideBanner();

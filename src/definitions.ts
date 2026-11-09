@@ -87,6 +87,27 @@ export interface RewardedVideoClosedEvent {
   isFinished: boolean;
 }
 
+export interface AdRevenueEvent {
+  /** Bitmask constant of the ad type (e.g. `AppodealAdType.INTERSTITIAL`). */
+  adType: number;
+  /** String representation of the ad type (e.g. `'interstitial'`, `'rewarded_video'`, `'banner'`). */
+  adTypeString: string;
+  /** Ad network name that served the impression (e.g. `'applovin'`, `'unity_ads'`). */
+  networkName: string;
+  /** Specific demand source or bidder name. */
+  demandSource: string;
+  /** Ad unit name configured in mediation. */
+  adUnitName: string;
+  /** Placement name where the ad was shown (e.g. `'default'`). */
+  placement: string;
+  /** Estimated revenue for this single impression. */
+  revenue: number;
+  /** Currency code (typically `'USD'`). */
+  currency: string;
+  /** Precision of the revenue value (e.g. `'exact'`, `'publisher_defined'`, `'estimated'`). */
+  precision: string;
+}
+
 /** Generic empty payload for events that carry no data. */
 export type EmptyEvent = Record<string, never>;
 
@@ -131,13 +152,36 @@ export interface AppodealPlugin {
   getNetworks(options?: { adTypes?: number }): Promise<{ networks: string[] }>;
 
   /**
+   * Check whether an ad of the specified type is currently loaded and ready.
+   *
+   * @param options.adType  `AppodealAdType` value (e.g. `AppodealAdType.REWARDED_VIDEO`).
+   */
+  isLoaded(options: { adType: number }): Promise<{ isLoaded: boolean }>;
+
+  /**
+   * Check whether an ad of the specified type can be shown for the given placement
+   * (verifies both load status and placement impression caps/pacing rules).
+   *
+   * @param options.adType     `AppodealAdType` value (e.g. `AppodealAdType.REWARDED_VIDEO`).
+   * @param options.placement  Optional placement name configured in the Appodeal dashboard.
+   */
+  canShow(options: {
+    adType: number;
+    placement?: string;
+  }): Promise<{ canShow: boolean }>;
+
+  /**
    * Show a banner ad.
    *
-   * @param options.position  Use `AppodealAdType.BANNER_BOTTOM` (8) or
-   *                          `AppodealAdType.BANNER_TOP` (16).
-   *                          Defaults to `BANNER_BOTTOM` if omitted.
+   * @param options.position   Use `AppodealAdType.BANNER_BOTTOM` (8) or
+   *                           `AppodealAdType.BANNER_TOP` (16).
+   *                           Defaults to `BANNER_BOTTOM` if omitted.
+   * @param options.placement  Optional placement name.
    */
-  showBanner(options?: { position?: number }): Promise<void>;
+  showBanner(options?: {
+    position?: number;
+    placement?: string;
+  }): Promise<void>;
 
   /** Hide the currently shown banner. */
   hideBanner(): Promise<void>;
@@ -145,16 +189,20 @@ export interface AppodealPlugin {
   /**
    * Show an interstitial ad.
    * Rejects if the interstitial is not loaded yet — listen to
-   * `onInterstitialLoaded` before calling this.
+   * `onInterstitialLoaded` or check `canShow()` / `isLoaded()` before calling this.
+   *
+   * @param options.placement  Optional placement name.
    */
-  showInterstitial(): Promise<void>;
+  showInterstitial(options?: { placement?: string }): Promise<void>;
 
   /**
    * Show a rewarded video ad.
    * Rejects if the rewarded video is not loaded yet — listen to
-   * `onRewardedVideoLoaded` before calling this.
+   * `onRewardedVideoLoaded` or check `canShow()` / `isLoaded()` before calling this.
+   *
+   * @param options.placement  Optional placement name.
    */
-  showRewardedVideo(): Promise<void>;
+  showRewardedVideo(options?: { placement?: string }): Promise<void>;
 
   // ── Banner listeners ────────────────────────────────────────────────────
 
@@ -250,6 +298,13 @@ export interface AppodealPlugin {
   addListener(
     eventName: 'onRewardedVideoClosed',
     listenerFunc: (event: RewardedVideoClosedEvent) => void,
+  ): Promise<PluginListenerHandle>;
+
+  // ── Ad Revenue listener ──────────────────────────────────────────────────
+
+  addListener(
+    eventName: 'onAdRevenueReceive',
+    listenerFunc: (event: AdRevenueEvent) => void,
   ): Promise<PluginListenerHandle>;
 
   /** Catch-all overload for custom event names. */

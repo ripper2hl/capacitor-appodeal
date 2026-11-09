@@ -7,6 +7,8 @@ import com.appodeal.ads.BannerCallbacks;
 import com.appodeal.ads.InterstitialCallbacks;
 import com.appodeal.ads.RewardedVideoCallbacks;
 import com.appodeal.ads.initializing.ApdInitializationError;
+import com.appodeal.ads.revenue.AdRevenueCallbacks;
+import com.appodeal.ads.revenue.RevenueInfo;
 import com.appodeal.ads.utils.Log.LogLevel;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -20,12 +22,17 @@ import java.util.List;
 import org.json.JSONException;
 
 @CapacitorPlugin(name = "Appodeal")
-public class AppodealPlugin extends Plugin implements BannerCallbacks, InterstitialCallbacks, RewardedVideoCallbacks {
+public class AppodealPlugin
+    extends Plugin
+    implements BannerCallbacks, InterstitialCallbacks, RewardedVideoCallbacks, AdRevenueCallbacks {
 
     private static final String TAG = "AppodealPlugin";
     private static final String KEY_AD_TYPES = "adTypes";
+    private static final String KEY_AD_TYPE = "adType";
+    private static final String KEY_PLACEMENT = "placement";
     private static final String KEY_IS_PRECACHE = "isPrecache";
     private static final String ERROR_ACTIVITY_UNAVAILABLE = "Activity is not available";
+    private static final String ERROR_MISSING_AD_TYPE = "Must provide adType";
 
     @FunctionalInterface
     private interface ActivityAction {
@@ -69,6 +76,7 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
             Appodeal.setBannerCallbacks(AppodealPlugin.this);
             Appodeal.setInterstitialCallbacks(AppodealPlugin.this);
             Appodeal.setRewardedVideoCallbacks(AppodealPlugin.this);
+            Appodeal.setAdRevenueCallbacks(AppodealPlugin.this);
 
             Appodeal.initialize(
                 activity,
@@ -124,11 +132,44 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
     }
 
     @PluginMethod
+    public void isLoaded(final PluginCall call) {
+        final Integer adType = call.getInt(KEY_AD_TYPE);
+        if (adType == null) {
+            call.reject(ERROR_MISSING_AD_TYPE);
+            return;
+        }
+        runOnActivityUiThread(call, activity -> {
+            JSObject ret = new JSObject();
+            ret.put("isLoaded", Appodeal.isLoaded(adType));
+            call.resolve(ret);
+        });
+    }
+
+    @PluginMethod
+    public void canShow(final PluginCall call) {
+        final Integer adType = call.getInt(KEY_AD_TYPE);
+        final String placement = call.getString(KEY_PLACEMENT);
+        if (adType == null) {
+            call.reject(ERROR_MISSING_AD_TYPE);
+            return;
+        }
+        runOnActivityUiThread(call, activity -> {
+            boolean allowed = hasPlacement(placement)
+                ? Appodeal.canShow(adType, placement.trim())
+                : Appodeal.canShow(adType);
+            JSObject ret = new JSObject();
+            ret.put("canShow", allowed);
+            call.resolve(ret);
+        });
+    }
+
+    @PluginMethod
     public void showBanner(final PluginCall call) {
         final Integer posOpt = call.getInt("position", Appodeal.BANNER_BOTTOM);
         final int position = (posOpt != null) ? posOpt : Appodeal.BANNER_BOTTOM;
+        final String placement = call.getString(KEY_PLACEMENT);
         runOnActivityUiThread(call, activity -> {
-            Appodeal.show(activity, position);
+            showAd(activity, position, placement);
             call.resolve();
         });
     }
@@ -143,9 +184,10 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
 
     @PluginMethod
     public void showInterstitial(final PluginCall call) {
+        final String placement = call.getString(KEY_PLACEMENT);
         runOnActivityUiThread(call, activity -> {
             if (Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
-                Appodeal.show(activity, Appodeal.INTERSTITIAL);
+                showAd(activity, Appodeal.INTERSTITIAL, placement);
                 call.resolve();
             } else {
                 call.reject("Interstitial not loaded");
@@ -155,14 +197,31 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
 
     @PluginMethod
     public void showRewardedVideo(final PluginCall call) {
+        final String placement = call.getString(KEY_PLACEMENT);
         runOnActivityUiThread(call, activity -> {
             if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)) {
-                Appodeal.show(activity, Appodeal.REWARDED_VIDEO);
+                showAd(activity, Appodeal.REWARDED_VIDEO, placement);
                 call.resolve();
             } else {
                 call.reject("Rewarded video not loaded");
             }
         });
+    }
+
+    private static boolean hasPlacement(final String placement) {
+        return placement != null && !placement.trim().isEmpty();
+    }
+
+    private static void showAd(final AppCompatActivity activity, final int adType, final String placement) {
+        if (hasPlacement(placement)) {
+            Appodeal.show(activity, adType, placement.trim());
+        } else {
+            Appodeal.show(activity, adType);
+        }
+    }
+
+    private static String safeString(final String value) {
+        return value != null ? value : "";
     }
 
     private static List<String> extractStringList(final JSArray array) {
@@ -301,5 +360,24 @@ public class AppodealPlugin extends Plugin implements BannerCallbacks, Interstit
     @Override
     public void onRewardedVideoExpired() {
         // Appodeal SDK automatically handles refreshing expired rewarded video ads.
+    }
+
+    // AdRevenueCallbacks
+    @Override
+    public void onAdRevenueReceive(final RevenueInfo revenueInfo) {
+        if (revenueInfo == null) {
+            return;
+        }
+        JSObject ret = new JSObject();
+        ret.put(KEY_AD_TYPE, revenueInfo.getAdType());
+        ret.put("adTypeString", safeString(revenueInfo.getAdTypeString()));
+        ret.put("networkName", safeString(revenueInfo.getNetworkName()));
+        ret.put("demandSource", safeString(revenueInfo.getDemandSource()));
+        ret.put("adUnitName", safeString(revenueInfo.getAdUnitName()));
+        ret.put(KEY_PLACEMENT, safeString(revenueInfo.getPlacement()));
+        ret.put("revenue", revenueInfo.getRevenue());
+        ret.put("currency", safeString(revenueInfo.getCurrency()));
+        ret.put("precision", safeString(revenueInfo.getRevenuePrecision()));
+        notifyListeners("onAdRevenueReceive", ret);
     }
 }

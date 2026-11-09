@@ -30,7 +30,23 @@ export class AppodealWeb extends WebPlugin implements AppodealPlugin {
     return { networks: [] };
   }
 
-  async showBanner(options?: { position?: number }): Promise<void> {
+  async isLoaded(options: { adType: number }): Promise<{ isLoaded: boolean }> {
+    console.log('AppodealWeb: isLoaded', options);
+    return { isLoaded: false };
+  }
+
+  async canShow(options: {
+    adType: number;
+    placement?: string;
+  }): Promise<{ canShow: boolean }> {
+    console.log('AppodealWeb: canShow', options);
+    return { canShow: false };
+  }
+
+  async showBanner(options?: {
+    position?: number;
+    placement?: string;
+  }): Promise<void> {
     console.log('AppodealWeb: showBanner', options);
   }
 
@@ -38,12 +54,12 @@ export class AppodealWeb extends WebPlugin implements AppodealPlugin {
     console.log('AppodealWeb: hideBanner');
   }
 
-  async showInterstitial(): Promise<void> {
-    console.log('AppodealWeb: showInterstitial');
+  async showInterstitial(options?: { placement?: string }): Promise<void> {
+    console.log('AppodealWeb: showInterstitial', options);
   }
 
-  async showRewardedVideo(): Promise<void> {
-    console.log('AppodealWeb: showRewardedVideo');
+  async showRewardedVideo(options?: { placement?: string }): Promise<void> {
+    console.log('AppodealWeb: showRewardedVideo', options);
   }
 
   // Satisfy TypeScript: web mock fires no events.
