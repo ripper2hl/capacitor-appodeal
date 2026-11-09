@@ -41,7 +41,6 @@
     "fmt": "npm run eslint -- --fix && npm run prettier -- --write",
     "eslint": "eslint src --ext ts",
     "prettier": "prettier \"src/**/*.ts\" \"android/src/**/*.java\"",
-    "docgen": "docgen --api AppodealPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
@@ -73,20 +72,18 @@
     "@capacitor/core": ">=6.0.0"
   },
   "devDependencies": {
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/core": "^6.0.0",
-    "@capacitor/docgen": "^0.2.1",
-    "@ionic/eslint-config": "^0.4.0",
-    "@ionic/prettier-config": "^1.0.1",
-    "eslint": "^8.57.0",
-    "prettier": "~2.8.8",
-    "prettier-plugin-java": "1.6.2",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.32.0",
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^24.0.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-summary": "^2.0.0",
-    "typescript": "~4.1.5"
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@ionic/eslint-config": "^0.5.0",
+    "@ionic/prettier-config": "^4.0.0",
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "eslint": "^8.57.1",
+    "prettier": "^3.5.0",
+    "prettier-plugin-java": "^2.6.0",
+    "rimraf": "^6.0.0",
+    "rollup": "^4.0.0",
+    "typescript": "^5.8.0"
   }
 }
