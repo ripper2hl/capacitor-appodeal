@@ -39,8 +39,8 @@
     "sonar:issues": "[ -f .env ] && set -a && . ./.env && set +a; curl -s -u \"$SONAR_TOKEN:\" \"http://127.0.0.1:9000/api/issues/search?componentKeys=capacitor-appodeal&resolved=false&ps=500\" | jq '.issues[] | {severity, type, message, file: .component, line}'",
     "lint": "npm run eslint && npm run prettier -- --check",
     "fmt": "npm run eslint -- --fix && npm run prettier -- --write",
-    "eslint": "eslint src --ext ts",
-    "prettier": "prettier \"src/**/*.ts\" \"android/src/**/*.java\"",
+    "eslint": "eslint src",
+    "prettier": "prettier --plugin=prettier-plugin-java \"src/**/*.ts\" \"android/src/**/*.java\"",
     "build": "npm run clean && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
@@ -64,9 +64,6 @@
       "src": "android"
     }
   },
-  "eslintConfig": {
-    "extends": "@ionic/eslint-config/recommended"
-  },
   "prettier": "@ionic/prettier-config",
   "peerDependencies": {
     "@capacitor/core": ">=6.0.0"
@@ -79,7 +76,7 @@
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
-    "eslint": "^8.57.1",
+    "eslint": "^10.0.0",
     "prettier": "^3.5.0",
     "prettier-plugin-java": "^2.6.0",
     "rimraf": "^6.0.0",

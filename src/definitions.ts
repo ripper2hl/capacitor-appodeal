@@ -13,6 +13,7 @@ export enum AppodealAdType {
   BANNER_TOP = 16,
   BANNER_VIEW = 64,
   REWARDED_VIDEO = 128,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   NON_SKIPPABLE_VIDEO = 128,
   MREC = 256,
   NATIVE = 512,
@@ -165,10 +166,7 @@ export interface AppodealPlugin {
    * @param options.adType     `AppodealAdType` value (e.g. `AppodealAdType.REWARDED_VIDEO`).
    * @param options.placement  Optional placement name configured in the Appodeal dashboard.
    */
-  canShow(options: {
-    adType: number;
-    placement?: string;
-  }): Promise<{ canShow: boolean }>;
+  canShow(options: { adType: number; placement?: string }): Promise<{ canShow: boolean }>;
 
   /**
    * Show a banner ad.
@@ -178,10 +176,7 @@ export interface AppodealPlugin {
    *                           Defaults to `BANNER_BOTTOM` if omitted.
    * @param options.placement  Optional placement name.
    */
-  showBanner(options?: {
-    position?: number;
-    placement?: string;
-  }): Promise<void>;
+  showBanner(options?: { position?: number; placement?: string }): Promise<void>;
 
   /** Hide the currently shown banner. */
   hideBanner(): Promise<void>;
@@ -216,15 +211,9 @@ export interface AppodealPlugin {
     listenerFunc: (event: EmptyEvent) => void,
   ): Promise<PluginListenerHandle>;
 
-  addListener(
-    eventName: 'onBannerShown',
-    listenerFunc: (event: EmptyEvent) => void,
-  ): Promise<PluginListenerHandle>;
+  addListener(eventName: 'onBannerShown', listenerFunc: (event: EmptyEvent) => void): Promise<PluginListenerHandle>;
 
-  addListener(
-    eventName: 'onBannerClicked',
-    listenerFunc: (event: EmptyEvent) => void,
-  ): Promise<PluginListenerHandle>;
+  addListener(eventName: 'onBannerClicked', listenerFunc: (event: EmptyEvent) => void): Promise<PluginListenerHandle>;
 
   addListener(
     eventName: 'onBannerShowFailed',
@@ -308,10 +297,7 @@ export interface AppodealPlugin {
   ): Promise<PluginListenerHandle>;
 
   /** Catch-all overload for custom event names. */
-  addListener(
-    eventName: string,
-    listenerFunc: (...args: any[]) => any,
-  ): Promise<PluginListenerHandle>;
+  addListener(eventName: string, listenerFunc: (...args: any[]) => any): Promise<PluginListenerHandle>;
 
   /** Remove all registered listeners at once. */
   removeAllListeners(): Promise<void>;

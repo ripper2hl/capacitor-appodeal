@@ -22,9 +22,7 @@ import java.util.List;
 import org.json.JSONException;
 
 @CapacitorPlugin(name = "Appodeal")
-public class AppodealPlugin
-    extends Plugin
-    implements BannerCallbacks, InterstitialCallbacks, RewardedVideoCallbacks, AdRevenueCallbacks {
+public class AppodealPlugin extends Plugin implements BannerCallbacks, InterstitialCallbacks, RewardedVideoCallbacks, AdRevenueCallbacks {
 
     private static final String TAG = "AppodealPlugin";
     private static final String KEY_AD_TYPES = "adTypes";
@@ -60,7 +58,7 @@ public class AppodealPlugin
             return;
         }
 
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             for (String network : disabledNetworks) {
                 Appodeal.disableNetwork(network);
             }
@@ -78,19 +76,14 @@ public class AppodealPlugin
             Appodeal.setRewardedVideoCallbacks(AppodealPlugin.this);
             Appodeal.setAdRevenueCallbacks(AppodealPlugin.this);
 
-            Appodeal.initialize(
-                activity,
-                appKey,
-                adTypes,
-                (List<ApdInitializationError> errors) -> {
-                    if (errors != null && !errors.isEmpty()) {
-                        for (ApdInitializationError error : errors) {
-                            Log.w(TAG, "Appodeal initialization warning: " + error.getMessage());
-                        }
+            Appodeal.initialize(activity, appKey, adTypes, (List<ApdInitializationError> errors) -> {
+                if (errors != null && !errors.isEmpty()) {
+                    for (ApdInitializationError error : errors) {
+                        Log.w(TAG, "Appodeal initialization warning: " + error.getMessage());
                     }
-                    call.resolve(new JSObject());
                 }
-            );
+                call.resolve(new JSObject());
+            });
         });
     }
 
@@ -104,7 +97,7 @@ public class AppodealPlugin
             return;
         }
 
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             if (adTypes != null) {
                 Appodeal.disableNetwork(network.trim(), adTypes);
             } else {
@@ -117,8 +110,8 @@ public class AppodealPlugin
     @PluginMethod
     public void getNetworks(final PluginCall call) {
         final Integer adTypes = call.getInt(KEY_AD_TYPES);
-        runOnActivityUiThread(call, activity -> {
-            List<String> networks = (adTypes != null) ? Appodeal.getNetworks(adTypes) : Appodeal.getNetworks();
+        runOnActivityUiThread(call, (activity) -> {
+            List<String> networks = adTypes != null ? Appodeal.getNetworks(adTypes) : Appodeal.getNetworks();
             JSArray array = new JSArray();
             if (networks != null) {
                 for (String net : networks) {
@@ -138,7 +131,7 @@ public class AppodealPlugin
             call.reject(ERROR_MISSING_AD_TYPE);
             return;
         }
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             JSObject ret = new JSObject();
             ret.put("isLoaded", Appodeal.isLoaded(adType));
             call.resolve(ret);
@@ -153,10 +146,8 @@ public class AppodealPlugin
             call.reject(ERROR_MISSING_AD_TYPE);
             return;
         }
-        runOnActivityUiThread(call, activity -> {
-            boolean allowed = hasPlacement(placement)
-                ? Appodeal.canShow(adType, placement.trim())
-                : Appodeal.canShow(adType);
+        runOnActivityUiThread(call, (activity) -> {
+            boolean allowed = hasPlacement(placement) ? Appodeal.canShow(adType, placement.trim()) : Appodeal.canShow(adType);
             JSObject ret = new JSObject();
             ret.put("canShow", allowed);
             call.resolve(ret);
@@ -166,9 +157,9 @@ public class AppodealPlugin
     @PluginMethod
     public void showBanner(final PluginCall call) {
         final Integer posOpt = call.getInt("position", Appodeal.BANNER_BOTTOM);
-        final int position = (posOpt != null) ? posOpt : Appodeal.BANNER_BOTTOM;
+        final int position = posOpt != null ? posOpt : Appodeal.BANNER_BOTTOM;
         final String placement = call.getString(KEY_PLACEMENT);
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             showAd(activity, position, placement);
             call.resolve();
         });
@@ -176,7 +167,7 @@ public class AppodealPlugin
 
     @PluginMethod
     public void hideBanner(final PluginCall call) {
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             Appodeal.hide(activity, Appodeal.BANNER);
             call.resolve();
         });
@@ -185,7 +176,7 @@ public class AppodealPlugin
     @PluginMethod
     public void showInterstitial(final PluginCall call) {
         final String placement = call.getString(KEY_PLACEMENT);
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             if (Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
                 showAd(activity, Appodeal.INTERSTITIAL, placement);
                 call.resolve();
@@ -198,7 +189,7 @@ public class AppodealPlugin
     @PluginMethod
     public void showRewardedVideo(final PluginCall call) {
         final String placement = call.getString(KEY_PLACEMENT);
-        runOnActivityUiThread(call, activity -> {
+        runOnActivityUiThread(call, (activity) -> {
             if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO)) {
                 showAd(activity, Appodeal.REWARDED_VIDEO, placement);
                 call.resolve();

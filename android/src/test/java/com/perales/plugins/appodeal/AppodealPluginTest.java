@@ -44,11 +44,11 @@ public class AppodealPluginTest {
         call = mock(PluginCall.class);
 
         doReturn(activity).when(plugin).getActivity();
-        doAnswer(invocation -> {
-                Runnable runnable = invocation.getArgument(0);
-                runnable.run();
-                return null;
-            })
+        doAnswer((invocation) -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        })
             .when(activity)
             .runOnUiThread(any(Runnable.class));
     }
@@ -100,7 +100,7 @@ public class AppodealPluginTest {
                         any(ApdInitializationCallback.class)
                     )
                 )
-                .thenAnswer(invocation -> {
+                .thenAnswer((invocation) -> {
                     ApdInitializationCallback callback = invocation.getArgument(3);
                     callback.onInitializationFinished(null);
                     return null;
@@ -137,7 +137,7 @@ public class AppodealPluginTest {
         try (MockedStatic<Appodeal> appodealMock = mockStatic(Appodeal.class)) {
             appodealMock
                 .when(() -> Appodeal.initialize(eq(activity), eq("test-key"), eq(Appodeal.BANNER), any(ApdInitializationCallback.class)))
-                .thenAnswer(invocation -> {
+                .thenAnswer((invocation) -> {
                     ApdInitializationCallback callback = invocation.getArgument(3);
                     callback.onInitializationFinished(Collections.singletonList(mockError));
                     return null;

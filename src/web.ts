@@ -16,16 +16,11 @@ export class AppodealWeb extends WebPlugin implements AppodealPlugin {
     console.log('AppodealWeb: initialize', safeOptions);
   }
 
-  async disableNetwork(options: {
-    network: string;
-    adTypes?: number;
-  }): Promise<void> {
+  async disableNetwork(options: { network: string; adTypes?: number }): Promise<void> {
     console.log('AppodealWeb: disableNetwork', options);
   }
 
-  async getNetworks(options?: {
-    adTypes?: number;
-  }): Promise<{ networks: string[] }> {
+  async getNetworks(options?: { adTypes?: number }): Promise<{ networks: string[] }> {
     console.log('AppodealWeb: getNetworks', options);
     return { networks: [] };
   }
@@ -35,18 +30,12 @@ export class AppodealWeb extends WebPlugin implements AppodealPlugin {
     return { isLoaded: false };
   }
 
-  async canShow(options: {
-    adType: number;
-    placement?: string;
-  }): Promise<{ canShow: boolean }> {
+  async canShow(options: { adType: number; placement?: string }): Promise<{ canShow: boolean }> {
     console.log('AppodealWeb: canShow', options);
     return { canShow: false };
   }
 
-  async showBanner(options?: {
-    position?: number;
-    placement?: string;
-  }): Promise<void> {
+  async showBanner(options?: { position?: number; placement?: string }): Promise<void> {
     console.log('AppodealWeb: showBanner', options);
   }
 
